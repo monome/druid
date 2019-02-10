@@ -26,6 +26,7 @@ specify an arg for different port ie
 
 ## BROKEN
 
+- DOESN'T WORK ON MACOS. serial port open just hangs.
 - sloppy use of `getch()` means chars aren't reported until CR, so there are double-prints etc
 - crow prints will interrupt command typing
 - no readline niceties (up-arrow)
