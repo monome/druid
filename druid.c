@@ -83,12 +83,6 @@ int main(int argc, char **argv) {
       } else {
         printf("\n");
         serial_tx(line);
-        /*while(i !=strlen(line)) {
-          wlen = write(fd, line+i, 1);
-          if(wlen==1) i++;
-          usleep(100);
-        }
-        i = 0;*/
         a = 0;
       }
     }
@@ -118,10 +112,8 @@ void *serial_rx(void *x) {
     if(len > 0) {
       buf[len] = 0;
       //printf("%d\t > %s", len, buf);
-      printf("> %s", buf);
+      if(len>1) printf("\n> %s\n", buf);
       len = 0;
-    } else {
-      printf(".");
     }
     usleep(100);
   }
