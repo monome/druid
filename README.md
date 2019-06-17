@@ -2,6 +2,8 @@
 
 a super-basic terminal for crow
 
+...and some pythong utils
+
 ## setup
 
 run `make`
@@ -36,3 +38,14 @@ specify an arg for different port ie
 - hack into old command-line maiden, use readline and ncurses etc
 
 
+---
+
+## python utils
+
+- requires pyserial. install using `pip install pyserial`
+
+```
+python upload.py test-2.lua
+```
+
+tested only on linux (assumes `/dev/ttyACM0`)
