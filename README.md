@@ -1,8 +1,62 @@
 # druid
 
-a super-basic terminal for crow
+a super-basic terminal and some utilities for crow
 
-...and some pythong utils
+## setup
+
+- tested only on linux (assumes crow on `/dev/ttyACM0`)
+- requires pyserial. install using `pip install pyserial`
+
+## druid (REPL)
+
+```
+python druid.py
+```
+
+- type q (enter) to quit.
+- crow response is printed after each command entered.
+- readline enabled (up arrow)
+
+example:
+
+```
+10.0.0.132 ~/druid $ python druid.py
+//// druid. q to quit.
+
+> x=6
+
+> print(x)
+6
+
+> output[1].volts = 0
+
+> q
+```
+
+## upload
+
+```
+python upload.py examples/test-2.lua
+```
+
+## download
+
+```
+python download.py
+```
+
+prints to screen. copy to file by:
+
+```
+python download.py > feathers.lua
+```
+
+
+---
+
+## c version
+
+check out the `c` subfolder
 
 ## setup
 
@@ -38,14 +92,6 @@ specify an arg for different port ie
 - hack into old command-line maiden, use readline and ncurses etc
 
 
----
 
-## python utils
 
-- requires pyserial. install using `pip install pyserial`
 
-```
-python upload.py test-2.lua
-```
-
-tested only on linux (assumes `/dev/ttyACM0`)
