@@ -24,7 +24,8 @@ ser.write("^^c")
 ser.write("^^s")
 
 for line in f:
-  ser.write(line+"\n")
+  #ser.write(line+"\n")
+  ser.write(line)
 
 ser.write("^^e")
 
