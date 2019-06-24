@@ -10,7 +10,9 @@ except:
 
 cmd = ""
 
+print("//// druid. q to quit.")
+
 while cmd != "q":
-  cmd = raw_input("> ")
   ser.write(cmd+"\r\n")
   print(ser.read(1000000))
+  cmd = raw_input("> ")
