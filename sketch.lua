@@ -1,3 +1,7 @@
-debug_usart("hi")
-output[2].volts = 4.0
-print(input[1]())
+function init()
+    for c=1, 4 do
+        output[c].asl:action()
+    end
+end
+
+init()

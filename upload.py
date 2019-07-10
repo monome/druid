@@ -24,8 +24,8 @@ ser.write("^^c")
 ser.write("^^s")
 
 for line in f:
-  #ser.write(line+"\n")
-  ser.write(line)
+  ser.write(line+"\n")
+  #ser.write(line)
 
 ser.write("^^e")
 
@@ -36,7 +36,4 @@ print("file uploaded:")
 ser.write("^^p")
 
 print(ser.read(100000))
-
-
-
 

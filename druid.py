@@ -27,6 +27,8 @@ while cmd != "q":
     ser.write("^^s")
     ser.write(getLua())
     ser.write("^^e")
+  elif cmd == "p":
+      ser.write("^^p")
   else:
     ser.write(cmd+"\r\n")
   print(ser.read(1000000))
