@@ -44,3 +44,5 @@ while cmd != "q":
   print(ser.read(1000000))
   cmd = raw_input("> ")
 
+ser.close()
+exit()
