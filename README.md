@@ -4,8 +4,10 @@ a super-basic terminal and some utilities for crow
 
 ## setup
 
-- tested only on linux (assumes crow on `/dev/ttyACM0`)
+- tested on linux & mac osx (attaches to first found crow port)
 - requires pyserial. install using `pip install pyserial`
+- requires readline. install using `pip install readline`
+- requires python 2.7+
 
 ## druid (REPL)
 
@@ -16,6 +18,9 @@ python druid.py
 - type q (enter) to quit.
 - crow response is printed after each command entered.
 - readline enabled (up arrow)
+- type r to send & run the lua script in `sketch.lua` immediately
+- type u to upload the script in `sketch.lua` to crow's internal flash memory
+- type p to print the script currently in crow's internal flash memory
 
 example:
 

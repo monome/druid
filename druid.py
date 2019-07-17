@@ -1,5 +1,6 @@
 import sys
 import serial
+import serial.tools.list_ports
 import readline
 
 def getLua():
@@ -10,10 +11,19 @@ def getLua():
             script += line
     return script
 
+port = ""
+for item in serial.tools.list_ports.comports():
+    if item[1] == 'crow: telephone line':
+        port = item[0]
+
+if port == "":
+    print("can't find crow device")
+    exit()
+
 try:
-  ser = serial.Serial("/dev/ttyACM0",115200, timeout=0.1)
+  ser = serial.Serial(port,115200, timeout=0.1)
 except:
-  print("serial problem with /dev/ttyACM0")
+  print("can't open serial port")
   exit()
 
 cmd = ""
@@ -34,3 +44,5 @@ while cmd != "q":
   print(ser.read(1000000))
   cmd = raw_input("> ")
 
+ser.close()
+exit()
