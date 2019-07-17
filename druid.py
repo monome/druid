@@ -1,6 +1,5 @@
 import sys
 import serial
-import readline
 import serial.tools.list_ports
 
 def getLua():
