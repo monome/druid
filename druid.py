@@ -1,7 +1,10 @@
 import sys
 import serial
 import serial.tools.list_ports
-import readline
+try:
+    import readline
+except importError:
+    print("readline failed to import")
 
 def getLua():
     script = ""
@@ -13,7 +16,7 @@ def getLua():
 
 port = ""
 for item in serial.tools.list_ports.comports():
-    if item[1] == 'crow: telephone line':
+    if "USB VID:PID=0483:5740" in item[2]:
         port = item[0]
 
 if port == "":
