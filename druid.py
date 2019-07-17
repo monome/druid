@@ -16,7 +16,8 @@ def getLua():
 
 port = ""
 for item in serial.tools.list_ports.comports():
-    if item[1] == 'crow: telephone line':
+    print(item[2])
+    if "USB VID:PID=0483:5740" in item[2]:
         port = item[0]
 
 if port == "":
