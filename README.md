@@ -5,9 +5,9 @@ a super-basic terminal and some utilities for crow
 ## setup
 
 - tested on linux & mac osx (attaches to first found crow port)
-- requires pyserial. install using `pip install pyserial`
-- requires readline. install using `pip install readline`
 - requires python 2.7+
+- requires pyserial. install using `pip install pyserial`
+- optionally uses readline. install using `pip install readline` (mac / linux only)
 
 ## druid (REPL)
 

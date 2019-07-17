@@ -1,7 +1,10 @@
 import sys
 import serial
 import serial.tools.list_ports
-import readline
+try:
+    import readline
+except importError:
+    print("readline failed to import")
 
 def getLua():
     script = ""
