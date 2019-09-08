@@ -7,12 +7,10 @@ except importError:
     print("readline failed to import")
 
 def getLua():
-    script = ""
     with open("./sketch.lua") as d:
         lua = d.readlines()
         for line in lua:
-            script += line
-    return script
+            ser.write(line)
 
 port = ""
 for item in serial.tools.list_ports.comports():
@@ -35,10 +33,10 @@ print("//// druid. q to quit.")
 
 while cmd != "q":
   if cmd == "r":
-    ser.write(getLua())
+    getLua()
   elif cmd == "u":
     ser.write("^^s")
-    ser.write(getLua())
+    getLua()
     ser.write("^^e")
   elif cmd == "p":
       ser.write("^^p")
