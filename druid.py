@@ -3,7 +3,7 @@ import serial
 import serial.tools.list_ports
 try:
     import readline
-except importError:
+except:
     print("readline failed to import")
 
 def forLuaLines( fn, file ):
