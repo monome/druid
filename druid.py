@@ -22,6 +22,15 @@ except:
   print("can't open serial port")
   exit()
 
+druid_help =  "\n"
+druid_help += "h            this menu\n"
+druid_help += "r            runs 'sketch.lua'\n"
+druid_help += "u            uploads 'sketch.lua'\n"
+druid_help += "r <filename> run <filename>\n"
+druid_help += "u <filename> upload <filename>\n"
+druid_help += "p            print current userscript\n"
+druid_help += "q            quit\n"
+
 def forLuaLines( fn, file ):
     with open(file) as d:
         lua = d.readlines()
@@ -46,7 +55,7 @@ def runner( fn, file ):
     fn("```")
 
 # enter
-print("//// druid. q to quit.")
+print("//// druid. q to quit. h for help")
 
 # run script passed from command line
 if len(sys.argv) == 2:
@@ -65,7 +74,7 @@ while cmd != "q":
         uploader( ser.write, "./sketch.lua" )
     elif cmd == "p":
         ser.write("^^p")
-    elif cmd == "help":
+    elif cmd == "h":
         print(druid_help)
     else:
         ser.write(cmd+"\r\n")
