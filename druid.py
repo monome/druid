@@ -35,7 +35,9 @@ print("//// druid. q to quit.")
 
 while cmd != "q":
   if cmd == "r":
+    ser.write("```")
     ser.write(getLua())
+    ser.write("```")
   elif cmd == "u":
     ser.write("^^s")
     ser.write(getLua())
