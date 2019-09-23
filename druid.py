@@ -6,13 +6,11 @@ try:
 except importError:
     print("readline failed to import")
 
-def getLua():
-    script = ""
+def forLuaLines( fn ):
     with open("./sketch.lua") as d:
         lua = d.readlines()
         for line in lua:
-            script += line
-    return script
+            fn( line )
 
 port = ""
 for item in serial.tools.list_ports.comports():
@@ -38,14 +36,15 @@ import time
 while cmd != "q":
   if cmd == "r":
     ser.write("```")
-    ser.write(getLua())
+    forLuaLines( ser.write )
+    time.sleep(0.1)
     ser.write("```")
   elif cmd == "u":
     ser.write("^^k")
     time.sleep(0.3) # wait for restart
     ser.write("^^s")
     time.sleep(0.1) # wait for allocation
-    ser.write(getLua()+"\r\n")
+    forLuaLines( ser.write )
     time.sleep(0.1) # wait for upload to complete
     ser.write("^^e")
   elif cmd == "p":
