@@ -7,6 +7,7 @@ except:
     print("readline failed to import")
 import time
 import threading
+import Queue
 
 port = ""
 for item in serial.tools.list_ports.comports():
@@ -23,8 +24,7 @@ except:
   print("can't open serial port")
   exit()
 
-druid_help =  "\n"
-druid_help += "h            this menu\n"
+druid_help  = "h            this menu\n"
 druid_help += "r            runs 'sketch.lua'\n"
 druid_help += "u            uploads 'sketch.lua'\n"
 druid_help += "r <filename> run <filename>\n"
@@ -67,9 +67,15 @@ def process( cmd ):
     elif cmd == "p":
         ser.write("^^p")
     elif cmd == "h":
-        print(druid_help)
+        print("\n"+druid_help)
     else:
         ser.write(cmd+"\r\n")
+
+#async reader
+def async_in(data, queue):
+    for line in iter(data.readline, b''):
+        queue.put(line)
+    data.close()
 
 ############################################
 # enter
@@ -79,17 +85,22 @@ print("//// druid. q to quit. h for help")
 if len(sys.argv) == 2:
     runner( ser.write, sys.argv[1] )
 
+# start async
+q = Queue.Queue()
+t = threading.Thread(target=async_in, args=(sys.stdin, q))
+t.daemon = True #thread dies with program
+t.start()
+
 # repl
 heard = ""
-lock = threading.Lock()
 while heard != "q":
-    with lock:
-        heard = raw_input("> ")
-        process(heard)
-    with lock:
-        r = ser.read(1000000)
+    try: heard = q.get_nowait()
+    except Queue.Empty:
+        r = ser.read(10000)
         if len(r) > 0:
-            print(r)
+            print("> "+r)
+    else: # got line
+        process(heard)
     time.sleep(0.05)
 
 # leave
