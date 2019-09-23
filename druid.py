@@ -41,6 +41,8 @@ while cmd != "q":
     ser.write(getLua())
     ser.write("```")
   elif cmd == "u":
+    ser.write("^^k")
+    time.sleep(0.3) # wait for restart
     ser.write("^^s")
     time.sleep(0.1) # wait for allocation
     ser.write(getLua()+"\r\n")
