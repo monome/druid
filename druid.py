@@ -41,11 +41,11 @@ while cmd != "q":
     ser.write("```")
   elif cmd == "u":
     ser.write("^^k")
-    time.sleep(0.3) # wait for restart
+    time.sleep(0.4) # wait for restart
     ser.write("^^s")
-    time.sleep(0.1) # wait for allocation
+    time.sleep(0.2) # wait for allocation
     forLuaLines( ser.write, "./sketch.lua" )
-    time.sleep(0.1) # wait for upload to complete
+    time.sleep(0.2) # wait for upload to complete
     ser.write("^^e")
   elif cmd == "p":
     ser.write("^^p")
