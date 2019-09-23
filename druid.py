@@ -6,8 +6,8 @@ try:
 except importError:
     print("readline failed to import")
 
-def forLuaLines( fn ):
-    with open("./sketch.lua") as d:
+def forLuaLines( fn, file ):
+    with open(file) as d:
         lua = d.readlines()
         for line in lua:
             fn( line )
@@ -36,7 +36,7 @@ import time
 while cmd != "q":
   if cmd == "r":
     ser.write("```")
-    forLuaLines( ser.write )
+    forLuaLines( ser.write, "./sketch.lua" )
     time.sleep(0.1)
     ser.write("```")
   elif cmd == "u":
@@ -44,7 +44,7 @@ while cmd != "q":
     time.sleep(0.3) # wait for restart
     ser.write("^^s")
     time.sleep(0.1) # wait for allocation
-    forLuaLines( ser.write )
+    forLuaLines( ser.write, "./sketch.lua" )
     time.sleep(0.1) # wait for upload to complete
     ser.write("^^e")
   elif cmd == "p":
