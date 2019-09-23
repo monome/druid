@@ -3,14 +3,14 @@ import serial
 import serial.tools.list_ports
 try:
     import readline
-except importError:
+except:
     print("readline failed to import")
 
-def getLua():
-    with open("./sketch.lua") as d:
+def forLuaLines( fn, file ):
+    with open(file) as d:
         lua = d.readlines()
         for line in lua:
-            ser.write(line)
+            fn( line )
 
 port = ""
 for item in serial.tools.list_ports.comports():
@@ -31,15 +31,24 @@ cmd = ""
 
 print("//// druid. q to quit.")
 
+import time
+
 while cmd != "q":
   if cmd == "r":
-    getLua()
+    ser.write("```")
+    forLuaLines( ser.write, "./sketch.lua" )
+    time.sleep(0.1)
+    ser.write("```")
   elif cmd == "u":
+    ser.write("^^k")
+    time.sleep(0.4) # wait for restart
     ser.write("^^s")
-    getLua()
+    time.sleep(0.2) # wait for allocation
+    forLuaLines( ser.write, "./sketch.lua" )
+    time.sleep(0.2) # wait for upload to complete
     ser.write("^^e")
   elif cmd == "p":
-      ser.write("^^p")
+    ser.write("^^p")
   else:
     ser.write(cmd+"\r\n")
   print(ser.read(1000000))
