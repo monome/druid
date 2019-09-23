@@ -41,10 +41,10 @@ while cmd != "q":
     ser.write(getLua())
     ser.write("```")
   elif cmd == "u":
-    ser.write("^^k")
-    time.sleep(0.1)
     ser.write("^^s")
-    ser.write(getLua())
+    time.sleep(0.1) # wait for allocation
+    ser.write(getLua()+"\r\n")
+    time.sleep(0.1) # wait for upload to complete
     ser.write("^^e")
   elif cmd == "p":
     ser.write("^^p")
