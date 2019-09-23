@@ -6,6 +6,7 @@ try:
 except:
     print("readline failed to import")
 import time
+import threading
 
 port = ""
 for item in serial.tools.list_ports.comports():
@@ -54,16 +55,7 @@ def runner( fn, file ):
     time.sleep(0.1)
     fn("```")
 
-# enter
-print("//// druid. q to quit. h for help")
-
-# run script passed from command line
-if len(sys.argv) == 2:
-    runner( ser.write, sys.argv[1] )
-
-# repl
-cmd = ""
-while cmd != "q":
+def process( cmd ):
     if "r " in cmd:
         runner( ser.write, cmd[2:] )
     elif cmd == "r":
@@ -78,8 +70,27 @@ while cmd != "q":
         print(druid_help)
     else:
         ser.write(cmd+"\r\n")
-    print(ser.read(1000000))
-    cmd = raw_input("> ")
+
+############################################
+# enter
+print("//// druid. q to quit. h for help")
+
+# run script passed from command line
+if len(sys.argv) == 2:
+    runner( ser.write, sys.argv[1] )
+
+# repl
+heard = ""
+lock = threading.Lock()
+while heard != "q":
+    with lock:
+        heard = raw_input("> ")
+        process(heard)
+    with lock:
+        r = ser.read(1000000)
+        if len(r) > 0:
+            print(r)
+    time.sleep(0.05)
 
 # leave
 ser.close()
