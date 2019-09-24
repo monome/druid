@@ -71,7 +71,7 @@ def process( cmd ):
     else:
         ser.write(cmd+"\r\n")
 
-#async reader
+# async reader
 def async_in(data, queue):
     for line in iter(data.readline, b''):
         queue.put(line)
