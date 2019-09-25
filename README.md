@@ -44,6 +44,11 @@ t@nav: ~/druid $ python3 druid.py
 > q
 ```
 
+execute a lua script and enter the REPL from the command line:
+```
+python3 druid.py examples/test-2.lua
+```
+
 ## upload
 
 ```
