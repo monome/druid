@@ -67,23 +67,23 @@ def runner( fn, file ):
     time.sleep(0.1)
     fn(bytes("```", 'utf-8'))
 
-def parser( ser, cmd ):
+def parser( s, cmd ):
     if cmd == "q":
         raise ValueError("bye.")
     elif "r " in cmd:
-        runner( ser.write, cmd[2:] )
+        runner( s.write, cmd[2:] )
     elif cmd == "r":
-        runner( ser.write, "./sketch.lua" )
+        runner( s.write, "./sketch.lua" )
     elif "u " in cmd:
-        uploader( ser.write, cmd[2:] )
+        uploader( s.write, cmd[2:] )
     elif cmd == "u":
-        uploader( ser.write, "./sketch.lua" )
+        uploader( s.write, "./sketch.lua" )
     elif cmd == "p":
-        ser.write(bytes("^^p", 'utf-8'))
+        s.write(bytes("^^p", 'utf-8'))
     elif cmd == "h":
         myprint(druid_help)
     else:
-        ser.write(bytes(cmd + "\r\n", 'utf-8'))
+        s.write(bytes(cmd + "\r\n", 'utf-8'))
 
 output_field = TextArea( style='class:output-field'
                        , text=druid_intro
@@ -95,7 +95,7 @@ input_field = TextArea( height=1
                       , wrap_lines=False
                       )
 
-async def shell(ser):
+async def shell(s):
     container = HSplit([ output_field
                        , Window( height=1
                                , char='/'
@@ -108,7 +108,7 @@ async def shell(ser):
 
     def accept(buff):
         try:
-            parser( ser, input_field.text )
+            parser( s, input_field.text )
         except ValueError as err:
             print(err)
             get_app().exit()
@@ -142,9 +142,9 @@ def myprint(st):
                                            , cursor_position=len(s)
                                            )
 
-async def printer(ser):
+async def printer(s):
     while True:
-        r = ser.read(1000)
+        r = s.read(1000)
         if len(r) > 0:
             myprint( r.decode('ascii') )
         await asyncio.sleep(0.001) # TODO set serial read rate!
@@ -153,24 +153,24 @@ def main():
     loop = asyncio.get_event_loop()
 
     try:
-        ser = crow_connect()
+        crow = crow_connect()
     except ValueError as err:
         print(err)
         exit()
 
     # run script passed from command line
     if len(sys.argv) == 2:
-        runner( ser.write, sys.argv[1] )
+        runner( crow.write, sys.argv[1] )
 
     use_asyncio_event_loop()
 
     with patch_stdout():
-        background_task = asyncio.gather(printer(ser), return_exceptions=True)
-        loop.run_until_complete(shell(ser))
+        background_task = asyncio.gather(printer(crow), return_exceptions=True)
+        loop.run_until_complete(shell(crow))
         background_task.cancel()
         loop.run_until_complete(background_task)
 
-    ser.close()
+    crow.close()
     exit()
 
 main()
