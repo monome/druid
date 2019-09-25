@@ -96,9 +96,9 @@ def crowparser( text ):
                 if args[0] == "2":
                     dest = capture2
                 _print( dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
-            else:
+            elif len(cmd) > 0:
                 myprint(cmd+'\n')
-    else:
+    elif len(text) > 0:
         myprint(text+'\n')
 
 capture1 = TextArea( style='class:capture-field'
@@ -193,7 +193,7 @@ async def printer():
         try:
             r = crow.read(10000)
             if len(r) > 0:
-                lines = r.decode('ascii').split()
+                lines = r.decode('ascii').split('\n\r')
                 for line in lines:
                     crowparser( line )
         except:
