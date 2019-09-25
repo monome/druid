@@ -1,39 +1,29 @@
 import sys
-import serial
+import crowlib
 import time
 
-try:
-  ser = serial.Serial("/dev/ttyACM0",115200, timeout=1)
-except:
-  print("serial problem with /dev/ttyACM0")
-  exit()
+def myprint(st):
+    print(st)
 
-if len(sys.argv) < 2:
-  print("usage: python upload.py file-to-upload.lua")
-  exit()
+def main():
+    try:
+        crow = crowlib.connect()
+    except ValueError as err:
+        print(err)
+        exit()
 
-try:
-  f = open(sys.argv[1],"r")
-except:
-  print("file problem")
-  exit()
+    # run script passed from command line
+    if len(sys.argv) == 2:
+        crowlib.upload( crow.write, myprint, sys.argv[1] )
+        print(crow.read(1000000).decode())
+        print(' file uploaded:')
+        time.sleep(0.5) # wait for new script to be ready
+        crow.write(bytes('^^p', 'utf-8'))
+        print(crow.read(1000000).decode())
+    else:
+        print('usage: python3 upload.py file-to-upload.lua')
 
-print("upload start.")
+    crow.close()
+    exit()
 
-ser.write("^^c")
-ser.write("^^s")
-
-for line in f:
-  ser.write(line+"\n")
-  #ser.write(line)
-
-ser.write("^^e")
-
-print(ser.read(10000))
-
-print("file uploaded:")
-
-ser.write("^^p")
-
-print(ser.read(100000))
-
+main()

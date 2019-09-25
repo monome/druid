@@ -1,32 +1,38 @@
 # druid
 
-a super-basic terminal and some utilities for crow
+a basic repl for crow with some utilities
 
 ## setup
 
-- tested on linux & mac osx (attaches to first found crow port)
-- requires python 2.7+
-- requires pyserial. install using `pip install pyserial`
-- optionally uses readline. install using `pip install readline` (mac / linux only)
+- requires python 3.5+
+  - windows & osx: https://www.python.org/downloads/
+  - linux: `sudo apt-get install python3 python3-pip`
+- requires pyserial, asyncio, and prompt_toolkit. install with:
+```
+pip3 install pyserial asyncio prompt_toolkit
+```
+## linux additional setup
 
-## druid (REPL)
+without 
+
+## druid
 
 ```
-python druid.py
+python3 druid.py
 ```
 
 - type q (enter) to quit.
-- crow response is printed after each command entered.
-- readline enabled (up arrow)
-- type r to send & run the lua script in `sketch.lua` immediately
-- type u to upload the script in `sketch.lua` to crow's internal flash memory
-- type p to print the script currently in crow's internal flash memory
+- type h (enter) for a list of special commands.
+
+- input values are printed on the top line
+- will reconnect to crow after a disconnect / restart
+- scrollable console history
 
 example:
 
 ```
-10.0.0.132 ~/druid $ python druid.py
-//// druid. q to quit.
+t@nav: ~/druid $ python3 druid.py
+//// druid. q to quit. h for help
 
 > x=6
 
@@ -38,20 +44,27 @@ example:
 > q
 ```
 
+execute a lua script and enter the REPL from the command line:
+```
+python3 druid.py examples/test-2.lua
+```
+
 ## upload
 
 ```
-python upload.py examples/test-2.lua
+python3 upload.py examples/test-2.lua
 ```
+
+uploads the provided lua file to crow & stores it in flash to be executed on boot.
 
 ## download
 
 ```
-python download.py
+python3 download.py
 ```
 
 prints to screen. copy to file by:
 
 ```
-python download.py > feathers.lua
+python3 download.py > feathers.lua
 ```
