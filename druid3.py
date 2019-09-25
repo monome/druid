@@ -94,7 +94,9 @@ def crowparser( text ):
                 dest = capture1
                 if args[0] == "2":
                     dest = capture2
-                _print( dest, ('\ninput '+args[0]+': '+args[2]+'\n'))
+                _print( dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
+            else:
+                myprint(cmd+'\n')
     else:
         myprint(text+'\n')
 
