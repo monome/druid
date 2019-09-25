@@ -2,9 +2,8 @@
 
 a basic repl for crow with some utilities
 
-## setup (python3 version)
+## setup
 
-- tested on linux & mac osx (attaches to first found crow port)
 - requires python 3.5+
   - windows & osx: https://www.python.org/downloads/
   - linux: `sudo apt-get install python3 python3-pip`
@@ -23,10 +22,9 @@ python3 druid.py
 ```
 
 - type q (enter) to quit.
-- type h (enter) for a list of commands.
+- type h (enter) for a list of special commands.
 
-- default input vals are printed on the top line
-- messages from crow are printed instantly (asynchronously)
+- input values are printed on the top line
 - will reconnect to crow after a disconnect / restart
 - scrollable console history
 
@@ -49,7 +47,7 @@ t@nav: ~/druid $ python3 druid.py
 ## upload
 
 ```
-python upload.py examples/test-2.lua
+python3 upload.py examples/test-2.lua
 ```
 
 uploads the provided lua file to crow & stores it in flash to be executed on boot.
@@ -57,11 +55,11 @@ uploads the provided lua file to crow & stores it in flash to be executed on boo
 ## download
 
 ```
-python download.py
+python3 download.py
 ```
 
 prints to screen. copy to file by:
 
 ```
-python download.py > feathers.lua
+python3 download.py > feathers.lua
 ```
