@@ -88,14 +88,14 @@ def parser( s, cmd ):
 output_field = TextArea( style='class:output-field'
                        , text=druid_intro
                        )
-input_field = TextArea( height=1
-                      , prompt='> '
-                      , style='class:input-field'
-                      , multiline=False
-                      , wrap_lines=False
-                      )
-
 async def shell(s):
+    input_field = TextArea( height=1
+                          , prompt='> '
+                          , style='class:input-field'
+                          , multiline=False
+                          , wrap_lines=False
+                          )
+
     container = HSplit([ output_field
                        , Window( height=1
                                , char='/'
