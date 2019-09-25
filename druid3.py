@@ -146,7 +146,7 @@ def myprint(st):
 async def printer():
     global ser
     while True:
-        r = ser.read(10000)
+        r = ser.read(1000)
         if len(r) > 0:
             myprint( r.decode('ascii') )
         await asyncio.sleep(0.001) # TODO set serial read rate!
