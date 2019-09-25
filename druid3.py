@@ -143,8 +143,7 @@ def myprint(st):
                                            , cursor_position=len(s)
                                            )
 
-async def printer():
-    global ser
+async def printer(ser):
     while True:
         r = ser.read(1000)
         if len(r) > 0:
@@ -168,7 +167,7 @@ def main():
     use_asyncio_event_loop()
 
     with patch_stdout():
-        background_task = asyncio.gather(printer(), return_exceptions=True)
+        background_task = asyncio.gather(printer(ser), return_exceptions=True)
         loop.run_until_complete(shell())
         background_task.cancel()
         loop.run_until_complete(background_task)
