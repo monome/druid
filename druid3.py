@@ -138,17 +138,18 @@ async def shell():
     result = await application.run_async()
 
 def myprint(st):
-    s = st.rstrip('\r')
+    s = output_field.text + st.replace('\r','')
     output_field.buffer.document = Document( text=s
-                                           , cursor_position=len(s))
+                                           , cursor_position=len(s)
+                                           )
 
 async def printer():
     global ser
     while True:
         r = ser.read(10000)
         if len(r) > 0:
-            myprint( output_field.text + r.decode('ASCII') )
-        await asyncio.sleep(0.01) # TODO set serial read rate!
+            myprint( r.decode('ascii') )
+        await asyncio.sleep(0.001) # TODO set serial read rate!
 
 def main():
     loop = asyncio.get_event_loop()
