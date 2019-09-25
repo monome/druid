@@ -30,26 +30,11 @@ python3 druid.py
 - will reconnect to crow after a disconnect / restart
 - scrollable console history
 
-## druid-old (REPL)
-
-deprecated version requires python2.7+
-
-```
-python druid-old.py
-```
-
-- type q (enter) to quit.
-- crow response is printed after each command entered.
-- readline enabled (up arrow history)
-- type r to send & run the lua script in `sketch.lua` immediately.
-- type u to upload the script in `sketch.lua` to crow's internal flash memory.
-- type p to print the script currently in crow's internal flash memory.
-
 example:
 
 ```
-10.0.0.132 ~/druid $ python druid.py
-//// druid. q to quit.
+t@nav: ~/druid $ python3 druid.py
+//// druid. q to quit. h for help
 
 > x=6
 
