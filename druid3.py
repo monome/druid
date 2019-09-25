@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import sys
 import serial
 import serial.tools.list_ports
+import time
 import asyncio
 
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
