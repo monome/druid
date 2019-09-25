@@ -116,7 +116,6 @@ async def shell():
 
     input_field.accept_handler = accept
 
-    # bindings for Ctrl-c or Ctrl-q exit FIXME remove these
     kb = KeyBindings()
     @kb.add('c-c', eager=True)
     @kb.add('c-q', eager=True)
