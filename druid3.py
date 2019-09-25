@@ -141,6 +141,7 @@ async def shell():
     def accept(buff):
         try:
             druidparser( cwrite, input_field.text )
+            myprint( '\n> '+input_field.text+'\n' )
         except ValueError as err:
             print(err)
             get_app().exit()
