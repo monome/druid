@@ -155,9 +155,9 @@ async def shell():
         event.app.exit()
 
     style = Style([
-        ('capture-field', 'bg:#000000 #747369'),
-        ('output-field', 'bg:#000000 #d3d0c8'),
-        ('input-field', 'bg:#000000 #f2f0ec'),
+        ('capture-field', '#747369'),
+        ('output-field', '#d3d0c8'),
+        ('input-field', '#f2f0ec'),
         ('line',        '#747369'),
     ])
 
