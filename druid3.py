@@ -14,7 +14,7 @@ from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import HSplit, Window, WindowAlign
+from prompt_toolkit.layout.containers import VSplit, HSplit, Window, WindowAlign
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
@@ -23,13 +23,14 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 
 druid_intro = "//// druid. q to quit. h for help\n\n"
 druid_help  = """
-h            this menu
-r            runs 'sketch.lua'
-u            uploads 'sketch.lua'
-r <filename> run <filename>
-u <filename> upload <filename>
-p            print current userscript
-q            quit
+ h            this menu
+ r            runs 'sketch.lua'
+ u            uploads 'sketch.lua'
+ r <filename> run <filename>
+ u <filename> upload <filename>
+ p            print current userscript
+ q            quit
+
 """
 
 def crow_connect():
@@ -67,28 +68,50 @@ def runner( fn, file ):
     time.sleep(0.1)
     fn(bytes("```", 'utf-8'))
 
-def parser( s, cmd ):
+def druidparser( writer, cmd ):
     if cmd == "q":
         raise ValueError("bye.")
     elif "r " in cmd:
-        runner( s.write, cmd[2:] )
+        runner( writer, cmd[2:] )
     elif cmd == "r":
-        runner( s.write, "./sketch.lua" )
+        runner( writer, "./sketch.lua" )
     elif "u " in cmd:
-        uploader( s.write, cmd[2:] )
+        uploader( writer, cmd[2:] )
     elif cmd == "u":
-        uploader( s.write, "./sketch.lua" )
+        uploader( writer, "./sketch.lua" )
     elif cmd == "p":
-        s.write(bytes("^^p", 'utf-8'))
+        writer(bytes("^^p", 'utf-8'))
     elif cmd == "h":
         myprint(druid_help)
     else:
-        s.write(bytes(cmd + "\r\n", 'utf-8'))
+        writer(bytes(cmd + "\r\n", 'utf-8'))
 
+def crowparser( text ):
+    if "^^" in text:
+        cmds = text.split('^^')
+        for cmd in cmds:
+            t3 = cmd.rstrip().partition('(')
+            x = t3[0]
+            args = t3[2].rstrip(')').partition(',')
+            if x == "stream" or x == "change":
+                dest = capture1
+                if args[0] == "2":
+                    dest = capture2
+                _print( dest, ('\ninput '+args[0]+': '+args[2]+'\n'))
+    else:
+        myprint(text+'\n')
+
+capture1 = TextArea( style='class:capture-field'
+                   , height=2
+                   )
+capture2 = TextArea( style='class:capture-field'
+                   , height=2
+                   )
 output_field = TextArea( style='class:output-field'
                        , text=druid_intro
                        )
-async def shell(s):
+async def shell():
+    global crow
     input_field = TextArea( height=1
                           , prompt='> '
                           , style='class:input-field'
@@ -96,7 +119,9 @@ async def shell(s):
                           , wrap_lines=False
                           )
 
-    container = HSplit([ output_field
+    captures = VSplit([ capture1, capture2 ])
+    container = HSplit([ captures
+                       , output_field
                        , Window( height=1
                                , char='/'
                                , style='class:line'
@@ -106,11 +131,23 @@ async def shell(s):
                        , input_field
                        ])
 
+    def cwrite(xs):
+        global crow
+        try:
+            crow.write(xs)
+        except:
+            try:
+                crow = crow_connect()
+                crowparser( " <online!>" )
+            except ValueError as err:
+                crowparser( " <lost connection>" )
+
     def accept(buff):
         try:
-            parser( s, input_field.text )
+            druidparser( cwrite, input_field.text )
         except ValueError as err:
             print(err)
+            print("HAPPY")
             get_app().exit()
 
     input_field.accept_handler = accept
@@ -122,6 +159,7 @@ async def shell(s):
         event.app.exit()
 
     style = Style([
+        ('capture-field', 'bg:#000000 #888888'),
         ('output-field', 'bg:#000000 #cccccc'),
         ('input-field', 'bg:#000000 #ffffff'),
         ('line',        '#443388'),
@@ -136,20 +174,36 @@ async def shell(s):
     )
     result = await application.run_async()
 
-def myprint(st):
-    s = output_field.text + st.replace('\r','')
-    output_field.buffer.document = Document( text=s
-                                           , cursor_position=len(s)
-                                           )
+def _print(field, st):
+    s = field.text + st.replace('\r','')
+    field.buffer.document = Document( text=s
+                                    , cursor_position=len(s)
+                                    )
 
-async def printer(s):
+def myprint(st):
+    _print( output_field, st )
+
+async def printer():
+    global crow
     while True:
-        r = s.read(1000)
-        if len(r) > 0:
-            myprint( r.decode('ascii') )
-        await asyncio.sleep(0.001) # TODO set serial read rate!
+        sleeptime = 0.001
+        try:
+            r = crow.read(10000)
+            if len(r) > 0:
+                lines = r.decode('ascii').split()
+                for line in lines:
+                    crowparser( line )
+        except:
+            try:
+                crow = crow_connect()
+                crowparser( " <online!>" )
+            except ValueError as err:
+                sleeptime = 1.0
+                crowparser( " <lost connection>" )
+        await asyncio.sleep(sleeptime)
 
 def main():
+    global crow
     loop = asyncio.get_event_loop()
 
     try:
@@ -165,8 +219,8 @@ def main():
     use_asyncio_event_loop()
 
     with patch_stdout():
-        background_task = asyncio.gather(printer(crow), return_exceptions=True)
-        loop.run_until_complete(shell(crow))
+        background_task = asyncio.gather(printer(), return_exceptions=True)
+        loop.run_until_complete(shell())
         background_task.cancel()
         loop.run_until_complete(background_task)
 
