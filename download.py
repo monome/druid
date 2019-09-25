@@ -1,13 +1,16 @@
-import sys
-import serial
-import time
+import crowlib
 
-try:
-  ser = serial.Serial("/dev/ttyACM0",115200, timeout=0.1)
-except:
-  print("serial problem with /dev/ttyACM0")
-  exit()
+def main():
+    try:
+        crow = crowlib.connect()
+    except ValueError as err:
+        print(err)
+        exit()
 
-ser.write("^^p")
+    crow.write(bytes('^^p', 'utf-8'))
+    print(crow.read(1000000).decode())
 
-print(ser.read(1000000))
+    crow.close()
+    exit()
+
+main()

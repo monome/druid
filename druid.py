@@ -1,10 +1,8 @@
 from __future__ import unicode_literals
 
 import sys
-import serial
-import serial.tools.list_ports
-import time
 import asyncio
+import crowlib
 
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -31,52 +29,17 @@ druid_help  = """
 
 """
 
-def crow_connect():
-    port = ""
-    for item in serial.tools.list_ports.comports():
-        if "USB VID:PID=0483:5740" in item[2]:
-            port = item[0]
-    if port == "":
-        raise ValueError("can't find crow device")
-    try:
-        return serial.Serial(port,115200, timeout=0.1)
-    except:
-        raise ValueError("can't open serial port")
-
-def forLuaLines( fn, file ):
-    with open(file) as d:
-        lua = d.readlines()
-        for line in lua:
-            fn( line.encode() ) # convert text to bytes
-
-def uploader( fn, file ):
-    myprint(" uploading "+file)
-    fn(bytes("^^k", 'utf-8'))
-    time.sleep(0.4) # wait for restart
-    fn(bytes("^^s", 'utf-8'))
-    time.sleep(0.2) # wait for allocation
-    forLuaLines( fn, file )
-    time.sleep(0.2) # wait for upload to complete
-    fn(bytes("^^e", 'utf-8'))
-
-def runner( fn, file ):
-    myprint(" running "+file+"\r")
-    fn(bytes("```", 'utf-8'))
-    forLuaLines( fn, file )
-    time.sleep(0.1)
-    fn(bytes("```", 'utf-8'))
-
 def druidparser( writer, cmd ):
     if cmd == "q":
         raise ValueError("bye.")
     elif "r " in cmd:
-        runner( writer, cmd[2:] )
+        crowlib.execute( writer, myprint, cmd[2:] )
     elif cmd == "r":
-        runner( writer, "./sketch.lua" )
+        crowlib.execute( writer, myprint, "./sketch.lua" )
     elif "u " in cmd:
-        uploader( writer, cmd[2:] )
+        crowlib.upload( writer, myprint, cmd[2:] )
     elif cmd == "u":
-        uploader( writer, "./sketch.lua" )
+        crowlib.upload( writer, myprint, "./sketch.lua" )
     elif cmd == "p":
         writer(bytes("^^p", 'utf-8'))
     elif cmd == "h":
@@ -182,7 +145,7 @@ def myprint(st):
 def crowreconnect():
     global crow
     try:
-        crow = crow_connect()
+        crow = crowlib.connect()
         myprint( " <online!>" )
     except ValueError as err:
         myprint( " <lost connection>" )
@@ -207,14 +170,14 @@ def main():
     loop = asyncio.get_event_loop()
 
     try:
-        crow = crow_connect()
+        crow = crowlib.connect()
     except ValueError as err:
         print(err)
         exit()
 
     # run script passed from command line
     if len(sys.argv) == 2:
-        runner( crow.write, sys.argv[1] )
+        crowlib.execute( crow.write, myprint, sys.argv[1] )
 
     use_asyncio_event_loop()
 
