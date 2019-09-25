@@ -182,9 +182,9 @@ def crowreconnect():
     global crow
     try:
         crow = crow_connect()
-        crowparser( " <online!>" )
+        myprint( " <online!>" )
     except ValueError as err:
-        crowparser( " <lost connection>" )
+        myprint( " <lost connection>" )
 
 async def printer():
     global crow
