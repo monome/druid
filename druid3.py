@@ -67,8 +67,7 @@ def runner( fn, file ):
     time.sleep(0.1)
     fn(bytes("```", 'utf-8'))
 
-def parser( cmd ):
-    global ser
+def parser( ser, cmd ):
     if cmd == "q":
         raise ValueError("bye.")
     elif "r " in cmd:
@@ -96,7 +95,7 @@ input_field = TextArea( height=1
                       , wrap_lines=False
                       )
 
-async def shell():
+async def shell(ser):
     container = HSplit([ output_field
                        , Window( height=1
                                , char='/'
@@ -109,7 +108,7 @@ async def shell():
 
     def accept(buff):
         try:
-            parser(input_field.text)
+            parser( ser, input_field.text )
         except ValueError as err:
             print(err)
             get_app().exit()
@@ -153,7 +152,6 @@ async def printer(ser):
 def main():
     loop = asyncio.get_event_loop()
 
-    global ser
     try:
         ser = crow_connect()
     except ValueError as err:
@@ -168,7 +166,7 @@ def main():
 
     with patch_stdout():
         background_task = asyncio.gather(printer(ser), return_exceptions=True)
-        loop.run_until_complete(shell())
+        loop.run_until_complete(shell(ser))
         background_task.cancel()
         loop.run_until_complete(background_task)
 
