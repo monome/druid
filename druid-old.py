@@ -4,6 +4,8 @@ import sys
 import serial
 import serial.tools.list_ports
 import time
+import threading
+import queue
 import asyncio
 
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
@@ -11,24 +13,23 @@ from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.document import Document
+from prompt_toolkit.filters import has_focus
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import VSplit, HSplit, Window, WindowAlign
+from prompt_toolkit.layout.containers import HSplit, Window, WindowAlign
 from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.styles import Style
-from prompt_toolkit.widgets import TextArea
+#from prompt_toolkit.styles import Style
 from prompt_toolkit.layout.controls import FormattedTextControl
 
 
 druid_intro = "//// druid. q to quit. h for help\n\n"
 druid_help  = """
- h            this menu
- r            runs 'sketch.lua'
- u            uploads 'sketch.lua'
- r <filename> run <filename>
- u <filename> upload <filename>
- p            print current userscript
- q            quit
-
+h            this menu
+r            runs 'sketch.lua'
+u            uploads 'sketch.lua'
+r <filename> run <filename>
+u <filename> upload <filename>
+p            print current userscript
+q            quit
 """
 
 def crow_connect():
@@ -66,62 +67,37 @@ def runner( fn, file ):
     time.sleep(0.1)
     fn(bytes("```", 'utf-8'))
 
-def druidparser( writer, cmd ):
+def parser( cmd ):
+    global ser
     if cmd == "q":
         raise ValueError("bye.")
     elif "r " in cmd:
-        runner( writer, cmd[2:] )
+        runner( ser.write, cmd[2:] )
     elif cmd == "r":
-        runner( writer, "./sketch.lua" )
+        runner( ser.write, "./sketch.lua" )
     elif "u " in cmd:
-        uploader( writer, cmd[2:] )
+        uploader( ser.write, cmd[2:] )
     elif cmd == "u":
-        uploader( writer, "./sketch.lua" )
+        uploader( ser.write, "./sketch.lua" )
     elif cmd == "p":
-        writer(bytes("^^p", 'utf-8'))
+        ser.write(bytes("^^p", 'utf-8'))
     elif cmd == "h":
         myprint(druid_help)
     else:
-        writer(bytes(cmd + "\r\n", 'utf-8'))
+        ser.write(bytes(cmd + "\r\n", 'utf-8'))
 
-def crowparser( text ):
-    if "^^" in text:
-        cmds = text.split('^^')
-        for cmd in cmds:
-            t3 = cmd.rstrip().partition('(')
-            x = t3[0]
-            args = t3[2].rstrip(')').partition(',')
-            if x == "stream" or x == "change":
-                dest = capture1
-                if args[0] == "2":
-                    dest = capture2
-                _print( dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
-            elif len(cmd) > 0:
-                myprint(cmd+'\n')
-    elif len(text) > 0:
-        myprint(text+'\n')
-
-capture1 = TextArea( style='class:capture-field'
-                   , height=2
-                   )
-capture2 = TextArea( style='class:capture-field'
-                   , height=2
-                   )
 output_field = TextArea( style='class:output-field'
                        , text=druid_intro
                        )
-async def shell():
-    global crow
-    input_field = TextArea( height=1
-                          , prompt='> '
-                          , style='class:input-field'
-                          , multiline=False
-                          , wrap_lines=False
-                          )
+input_field = TextArea( height=1
+                      , prompt='> '
+                      , style='class:input-field'
+                      , multiline=False
+                      , wrap_lines=False
+                      )
 
-    captures = VSplit([ capture1, capture2 ])
-    container = HSplit([ captures
-                       , output_field
+async def shell():
+    container = HSplit([ output_field
                        , Window( height=1
                                , char='/'
                                , style='class:line'
@@ -131,23 +107,16 @@ async def shell():
                        , input_field
                        ])
 
-    def cwrite(xs):
-        global crow
-        try:
-            crow.write(xs)
-        except:
-            crowreconnect()
-
     def accept(buff):
         try:
-            druidparser( cwrite, input_field.text )
-            myprint( '\n> '+input_field.text+'\n' )
+            parser(input_field.text)
         except ValueError as err:
             print(err)
             get_app().exit()
 
     input_field.accept_handler = accept
 
+    # bindings for Ctrl-c or Ctrl-q exit FIXME remove these
     kb = KeyBindings()
     @kb.add('c-c', eager=True)
     @kb.add('c-q', eager=True)
@@ -155,10 +124,9 @@ async def shell():
         event.app.exit()
 
     style = Style([
-        ('capture-field', '#747369'),
-        ('output-field', '#d3d0c8'),
-        ('input-field', '#f2f0ec'),
-        ('line',        '#747369'),
+        ('output-field', 'bg:#000000 #cccccc'),
+        ('input-field', 'bg:#000000 #ffffff'),
+        ('line',        '#443388'),
     ])
 
     application = Application(
@@ -170,51 +138,32 @@ async def shell():
     )
     result = await application.run_async()
 
-def _print(field, st):
-    s = field.text + st.replace('\r','')
-    field.buffer.document = Document( text=s
-                                    , cursor_position=len(s)
-                                    )
-
 def myprint(st):
-    _print( output_field, st )
-
-def crowreconnect():
-    global crow
-    try:
-        crow = crow_connect()
-        myprint( " <online!>" )
-    except ValueError as err:
-        myprint( " <lost connection>" )
+    s = st.rstrip('\r')
+    output_field.buffer.document = Document( text=s
+                                           , cursor_position=len(s))
 
 async def printer():
-    global crow
+    global ser
     while True:
-        sleeptime = 0.001
-        try:
-            r = crow.read(10000)
-            if len(r) > 0:
-                lines = r.decode('ascii').split('\n\r')
-                for line in lines:
-                    crowparser( line )
-        except:
-            sleeptime = 1.0
-            crowreconnect()
-        await asyncio.sleep(sleeptime)
+        r = ser.read(10000)
+        if len(r) > 0:
+            myprint( output_field.text + r.decode('ASCII') )
+        await asyncio.sleep(0.01) # TODO set serial read rate!
 
 def main():
-    global crow
     loop = asyncio.get_event_loop()
 
+    global ser
     try:
-        crow = crow_connect()
+        ser = crow_connect()
     except ValueError as err:
         print(err)
         exit()
 
     # run script passed from command line
     if len(sys.argv) == 2:
-        runner( crow.write, sys.argv[1] )
+        runner( ser.write, sys.argv[1] )
 
     use_asyncio_event_loop()
 
@@ -224,7 +173,7 @@ def main():
         background_task.cancel()
         loop.run_until_complete(background_task)
 
-    crow.close()
+    ser.close()
     exit()
 
 main()
