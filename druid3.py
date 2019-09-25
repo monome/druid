@@ -135,18 +135,13 @@ async def shell():
         try:
             crow.write(xs)
         except:
-            try:
-                crow = crow_connect()
-                crowparser( " <online!>" )
-            except ValueError as err:
-                crowparser( " <lost connection>" )
+            crowreconnect()
 
     def accept(buff):
         try:
             druidparser( cwrite, input_field.text )
         except ValueError as err:
             print(err)
-            print("HAPPY")
             get_app().exit()
 
     input_field.accept_handler = accept
@@ -182,6 +177,14 @@ def _print(field, st):
 def myprint(st):
     _print( output_field, st )
 
+def crowreconnect():
+    global crow
+    try:
+        crow = crow_connect()
+        crowparser( " <online!>" )
+    except ValueError as err:
+        crowparser( " <lost connection>" )
+
 async def printer():
     global crow
     while True:
@@ -193,12 +196,8 @@ async def printer():
                 for line in lines:
                     crowparser( line )
         except:
-            try:
-                crow = crow_connect()
-                crowparser( " <online!>" )
-            except ValueError as err:
-                sleeptime = 1.0
-                crowparser( " <lost connection>" )
+            sleeptime = 1.0
+            crowreconnect()
         await asyncio.sleep(sleeptime)
 
 def main():
