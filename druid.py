@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from __future__ import unicode_literals
 
 import sys
@@ -190,4 +192,5 @@ def main():
     crow.close()
     exit()
 
-main()
+if __name__ == '__main__':
+  main()
