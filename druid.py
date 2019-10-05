@@ -3,13 +3,6 @@
 from __future__ import unicode_literals
 
 import sys
-import serial
-import serial.tools.list_ports
-try:
-    import readline
-except:
-    print("readline failed to import")
-import time
 import asyncio
 import crowlib
 
