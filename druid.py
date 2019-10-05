@@ -3,6 +3,13 @@
 from __future__ import unicode_literals
 
 import sys
+import serial
+import serial.tools.list_ports
+try:
+    import readline
+except:
+    print("readline failed to import")
+import time
 import asyncio
 import crowlib
 
@@ -14,10 +21,13 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import VSplit, HSplit, Window, WindowAlign
 from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.screen import Char
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.layout.controls import FormattedTextControl
 
+# monkey patch to fix https://github.com/monome/druid/issues/8
+Char.display_mappings['\t'] = '  '
 
 druid_intro = "//// druid. q to quit. h for help\n\n"
 druid_help  = """
