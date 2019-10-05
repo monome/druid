@@ -39,7 +39,7 @@ def upload( writer, printer, file ):
     writer(bytes("^^e", 'utf-8'))
 
 def execute( writer, printer, file ):
-    printer(" running "+file+"\r")
+    printer(" running "+file+"\n\r")
     writer(bytes("```", 'utf-8'))
     writelines( writer, file )
     time.sleep(0.1)
