@@ -29,7 +29,7 @@ def writelines( writer, file ):
             writer( line.encode() ) # convert text to bytes
 
 def upload( writer, printer, file ):
-    printer(" uploading "+file)
+    printer(" uploading "+file+"\n\r")
     writer(bytes("^^k", 'utf-8'))
     time.sleep(0.4) # wait for restart
     writer(bytes("^^s", 'utf-8'))
