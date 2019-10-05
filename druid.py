@@ -18,9 +18,15 @@ from prompt_toolkit.layout.containers import (
     Window, WindowAlign,
 )
 from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.screen import Char
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.layout.controls import FormattedTextControl
+
+
+# monkey patch to fix https://github.com/monome/druid/issues/8
+Char.display_mappings['\t'] = '  '
+
 
 druid_intro = "//// druid. q to quit. h for help\n\n"
 druid_help = """
