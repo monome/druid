@@ -50,3 +50,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+Lib/
+Scripts/
+__pycache__/
+*.log
+pip-selfcheck.json
+pyvenv.cfg
