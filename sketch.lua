@@ -1,10 +1,6 @@
---- sketch
--- do a thing
+--- sketch name
+-- description
 
 function init()
-    for n=1,4 do
-        output[n].volts = 0
-    end
+    -- startup things
 end
-
-init()
