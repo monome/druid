@@ -7,13 +7,16 @@ a basic repl for crow with some utilities
 - requires python 3.5+
   - windows & osx: https://www.python.org/downloads/
   - linux: `sudo apt-get install python3 python3-pip`
-- requires pyserial, asyncio, and prompt_toolkit. install with:
+- requires pyserial, asyncio, and prompt_toolkit. install & run with:
+```bash
+sh setup.sh
+source Scripts/activate  # need to do this each time you run a new shell
+python druid.py
 ```
-pip3 install pyserial asyncio prompt_toolkit
-```
+
 ## linux additional setup
 
-without 
+without
 
 ## druid
 
@@ -48,6 +51,8 @@ execute a lua script and enter the REPL from the command line:
 ```
 python3 druid.py examples/test-2.lua
 ```
+
+diagnostic logs are written to druid.log
 
 ## upload
 

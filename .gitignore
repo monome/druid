@@ -57,3 +57,4 @@ __pycache__/
 *.log
 pip-selfcheck.json
 pyvenv.cfg
+*~
