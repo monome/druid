@@ -9,7 +9,7 @@ function init()
         output[i].slew = 0
         output[i].volts = 0
     end
-    for i=1,7 do
+    for i=1,metro.num_metros do
         metro[i]:stop()
     end
 end
