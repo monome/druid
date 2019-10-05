@@ -2,8 +2,10 @@ import sys
 import crowlib
 import time
 
+
 def myprint(st):
     print(st)
+
 
 def main():
     try:
@@ -14,10 +16,10 @@ def main():
 
     # run script passed from command line
     if len(sys.argv) == 2:
-        crowlib.upload( crow.write, myprint, sys.argv[1] )
+        crowlib.upload(crow.write, myprint, sys.argv[1])
         print(crow.read(1000000).decode())
         print(' file uploaded:')
-        time.sleep(0.5) # wait for new script to be ready
+        time.sleep(0.5)  # wait for new script to be ready
         crow.write(bytes('^^p', 'utf-8'))
         print(crow.read(1000000).decode())
     else:
@@ -25,5 +27,6 @@ def main():
 
     crow.close()
     exit()
+
 
 main()
