@@ -38,6 +38,8 @@ def upload( writer, printer, file ):
     writelines( writer, file )
     time.sleep(0.2) # wait for upload to complete
     writer(bytes("^^e", 'utf-8'))
+    time.sleep(0.2) # wait for flash write
+    writer(bytes("init()\n\r", 'utf-8'))
 
 def execute( writer, printer, file ):
     printer(" running "+file+"\n\r")
@@ -45,3 +47,5 @@ def execute( writer, printer, file ):
     writelines( writer, file )
     time.sleep(0.1)
     writer(bytes("```", 'utf-8'))
+    time.sleep(0.1)
+    writer(bytes("init()\n\r", 'utf-8'))
