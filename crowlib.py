@@ -27,6 +27,7 @@ def writelines( writer, file ):
         lua = d.readlines()
         for line in lua:
             writer( line.encode() ) # convert text to bytes
+            time.sleep(0.001) # fix os x crash?
 
 def upload( writer, printer, file ):
     printer(" uploading "+file+"\n\r")
