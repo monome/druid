@@ -7,11 +7,9 @@
 -- out4: s&h input+random nudge (quantized chromatically)
 
 function init()
-    input[1].mode = 'none'
     input[2]{ mode      = 'change'
             , direction = 'rising'
             }
-    for n=1,4 do output[n].slew = 0 end
 end
 
 input[2].change = function()
