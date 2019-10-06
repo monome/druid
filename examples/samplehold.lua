@@ -1,22 +1,22 @@
 --- sample & hold
--- in1: input voltage
--- in2: sampling clock
--- out1: s&h input
--- out2: s&h input (quantized chromatically)
--- out3: s&h random
+-- in1: sampling clock
+-- in2: input voltage
+-- out1: s&h random
+-- out2: s&h input
+-- out3: s&h input (quantized chromatically)
 -- out4: s&h input+random nudge (quantized chromatically)
 
 function init()
-    input[2]{ mode      = 'change'
+    input[1]{ mode      = 'change'
             , direction = 'rising'
             }
 end
 
-input[2].change = function()
-    v = input[1].volts
-    output[1].volts = v
-    output[2].volts = math.floor(v*12)/12
+input[1].change = function()
     r = math.random() * 10.0 - 5.0
-    output[3].volts = r
+    v = input[2].volts
+    output[1].volts = r
+    output[2].volts = v
+    output[3].volts = math.floor(v*12)/12
     output[4].volts = math.floor(r + v*12)/12
 end
