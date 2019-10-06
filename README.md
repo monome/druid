@@ -68,3 +68,17 @@ prints to screen. copy to file by:
 ```
 python3 download.py > feathers.lua
 ```
+
+## examples
+
+druid comes with a bunch of example scripts to help introduce crow's syntax, and spur your imagination with some zany ideas. Here's the list with a brief description of each (most scripts have a longer description including the assignment of ins and outs at the top of the script):
+
+- `boids.lua`: four simulated birds that fly around your input
+- `booleanlogic.lua`: logic gates determined by two input gates
+- `clockdiv.lua`: four configurable clock divisions of the input clock
+- `cvdelay.lua`: a control voltage delay with four taps & looping option
+- `gingerbread.lua`: clocked chaos generators
+- `samplehold.lua`: sample and hold with quantization & randomness
+- `seqswitch.lua`: route an input to 1 of 4 outputs with optional 'hold'
+- `shiftregister.lua`: output the last 4 captured voltages & play just friends
+- `stop.lua`: reset crow

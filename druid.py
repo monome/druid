@@ -3,13 +3,6 @@
 from __future__ import unicode_literals
 
 import sys
-import serial
-import serial.tools.list_ports
-try:
-    import readline
-except:
-    print("readline failed to import")
-import time
 import asyncio
 import crowlib
 
@@ -115,8 +108,8 @@ async def shell():
 
     def accept(buff):
         try:
-            druidparser( cwrite, input_field.text )
             myprint( '\n> '+input_field.text+'\n' )
+            druidparser( cwrite, input_field.text )
         except ValueError as err:
             print(err)
             get_app().exit()
@@ -158,9 +151,9 @@ def crowreconnect():
     global crow
     try:
         crow = crowlib.connect()
-        myprint( " <online!>" )
+        myprint( " <online!>\n" )
     except ValueError as err:
-        myprint( " <lost connection>" )
+        myprint( " <lost connection>\n" )
 
 async def printer():
     global crow
