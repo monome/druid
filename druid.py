@@ -42,19 +42,25 @@ druid_help  = """
 """
 
 def druidparser( writer, cmd ):
-    if cmd == "q":
+    parts = cmd.split()
+    if len(parts) == 0:
+        return
+    c = parts[0]
+    if c == "q":
         raise ValueError("bye.")
-    elif "r " in cmd:
-        crowlib.execute( writer, myprint, cmd[2:] )
-    elif cmd == "r":
-        crowlib.execute( writer, myprint, "./sketch.lua" )
-    elif "u " in cmd:
-        crowlib.upload( writer, myprint, cmd[2:] )
-    elif cmd == "u":
-        crowlib.upload( writer, myprint, "./sketch.lua" )
-    elif cmd == "p":
+    elif c == "r":
+        if len(parts) == 1:
+            crowlib.execute( writer, myprint, "./sketch.lua" )
+        else:
+            crowlib.execute( writer, myprint, parts[1] )
+    elif c == "u":
+        if len(parts) == 1:
+            crowlib.upload( writer, myprint, "./sketch.lua" )
+        else:
+            crowlib.upload( writer, myprint, parts(1) )
+    elif c == "p":
         writer(bytes("^^p", 'utf-8'))
-    elif cmd == "h":
+    elif c == "h":
         myprint(druid_help)
     else:
         writer(bytes(cmd + "\r\n", 'utf-8'))
@@ -72,7 +78,7 @@ def crowparser( text ):
                     dest = capture2
                 _print( dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
             elif len(cmd) > 0:
-                myprint(cmd+'\n')
+                myprint('^^'+cmd+'\n')
     elif len(text) > 0:
         myprint(text+'\n')
 
