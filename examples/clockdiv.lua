@@ -32,5 +32,3 @@ input[1].change = function(s)
         end
     end
 end
-
-init()

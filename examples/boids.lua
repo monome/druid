@@ -97,5 +97,3 @@ function init()
                     }
   mover:start()
 end
-
-init()

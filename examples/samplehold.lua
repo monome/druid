@@ -22,5 +22,3 @@ input[2].change = function()
     output[3].volts = r
     output[4].volts = math.floor(r + v*12)/12
 end
-
-init()

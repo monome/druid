@@ -13,5 +13,3 @@ function init()
         metro[i]:stop()
     end
 end
-
-init()

@@ -31,5 +31,3 @@ input[2].change = function()
     dest = (dest % 4)+1 -- rotate channel
     if not hold then output[old].volts = 0 end
 end
-
-init()

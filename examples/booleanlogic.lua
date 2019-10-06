@@ -34,5 +34,3 @@ end
 input[2].change = function(s)
     logic(2,s)
 end
-
-init()
