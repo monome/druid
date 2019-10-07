@@ -34,7 +34,7 @@ def upload( writer, printer, file ):
     writer(bytes("^^s", 'utf-8'))
     time.sleep(0.2) # wait for allocation
     writelines( writer, file )
-    time.sleep(0.4) # wait for upload to complete
+    time.sleep(0.01) # wait for upload to complete
     writer(bytes("^^w", 'utf-8'))
 
 def execute( writer, printer, file ):
@@ -42,7 +42,7 @@ def execute( writer, printer, file ):
     writer(bytes("^^s", 'utf-8'))
     time.sleep(0.2) # wait for allocation
     writelines( writer, file )
-    time.sleep(0.2)
+    time.sleep(0.01)
     writer(bytes("^^e", 'utf-8'))
 
 # leaving this here for 'run a code chunk'
