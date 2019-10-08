@@ -8,15 +8,31 @@ a basic repl for crow with some utilities
   - windows & osx: https://www.python.org/downloads/
   - linux: `sudo apt-get install python3 python3-pip`
 - requires pyserial, asyncio, and prompt_toolkit. install & run with:
+
+note: you might want `python` and `pip` instead of `python3` and `pip3`
+depending on your platform. if `python3` is not found, check that you have 
+python >= 3.5 with`python --version`.
+
+install and run:
 ```bash
-sh setup.sh
-source Scripts/activate  # need to do this each time you run a new shell
-python druid.py
+pip3 install -r requirements.txt
+python3 druid.py
 ```
 
-## linux additional setup
+to avoid conflicts with other python applications on your system,
+you can run in a virtualenv instead of installing dependencies
+globally:
+```bash
+python3 -m venv .
 
-without
+# windows
+source Scripts/activate  # need to do this each time you run a new shell
+
+# other
+source bin/activate  # need to do this each time you run a new shell
+
+python3 druid.py
+```
 
 ## druid
 
