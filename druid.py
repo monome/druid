@@ -3,9 +3,10 @@
 from __future__ import unicode_literals
 
 import logging.config
-import sys
 import asyncio
 import crowlib
+import os
+import sys
 
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -27,7 +28,6 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 # monkey patch to fix https://github.com/monome/druid/issues/8
 Char.display_mappings['\t'] = '  '
 
-
 druid_intro = "//// druid. q to quit. h for help\n\n"
 druid_help = """
  h            this menu
@@ -42,19 +42,29 @@ druid_help = """
 
 
 def druidparser(writer, cmd):
-    if cmd == "q":
+    parts = cmd.split(maxsplit=1)
+    if len(parts) == 0:
+        return
+    c = parts[0]
+    if c == "q":
         raise ValueError("bye.")
-    elif "r " in cmd:
-        crowlib.execute(writer, myprint, cmd[2:])
-    elif cmd == "r":
-        crowlib.execute(writer, myprint, "./sketch.lua")
-    elif "u " in cmd:
-        crowlib.upload(writer, myprint, cmd[2:])
-    elif cmd == "u":
-        crowlib.upload(writer, myprint, "./sketch.lua")
-    elif cmd == "p":
+    elif c == "r":
+        if len(parts) == 1:
+            crowlib.execute(writer, myprint, "./sketch.lua")
+        elif len(parts) == 2 and os.path.isfile(parts[1]):
+            crowlib.execute(writer, myprint, parts[1])
+        else:
+            writer(bytes(cmd + "\r\n", 'utf-8'))
+    elif c == "u":
+        if len(parts) == 1:
+            crowlib.upload(writer, myprint, "./sketch.lua")
+        elif len(parts) == 2 and os.path.isfile(parts[1]):
+            crowlib.upload(writer, myprint, parts[1])
+        else:
+            writer(bytes(cmd + "\r\n", 'utf-8'))
+    elif c == "p":
         writer(bytes("^^p", 'utf-8'))
-    elif cmd == "h":
+    elif c == "h":
         myprint(druid_help)
     else:
         writer(bytes(cmd + "\r\n", 'utf-8'))
@@ -73,7 +83,7 @@ def crowparser(text):
                     dest = capture2
                 _print(dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
             elif len(cmd) > 0:
-                myprint(cmd+'\n')
+                myprint('^^'+cmd+'\n')
     elif len(text) > 0:
         myprint(text+'\n')
 
@@ -88,27 +98,12 @@ output_field = TextArea(style='class:output-field', text=druid_intro
 
 async def shell():
     global crow
-    input_field = TextArea(
-        height=1,
-        prompt='> ',
-        style='class:input-field',
-        multiline=False,
-        wrap_lines=False
-    )
-
+    input_field = TextArea(height=1, prompt='> ', style='class:input-field', multiline=False, wrap_lines=False
+                           )
     captures = VSplit([capture1, capture2])
-    container = HSplit([
-        captures,
-        output_field,
-        Window(
-            height=1,
-            char='/',
-            style='class:line',
-            content=FormattedTextControl(text='druid////'),
-            align=WindowAlign.RIGHT,
-        ),
-        input_field,
-    ])
+    container = HSplit([captures, output_field, Window(height=1, char='/', style='class:line', content=FormattedTextControl(text='druid////'), align=WindowAlign.RIGHT
+                                                       ), input_field
+                        ])
 
     def cwrite(xs):
         global crow
@@ -119,8 +114,8 @@ async def shell():
 
     def accept(buff):
         try:
-            druidparser(cwrite, input_field.text)
             myprint('\n> '+input_field.text+'\n')
+            druidparser(cwrite, input_field.text)
         except ValueError as err:
             print(err)
             get_app().exit()
@@ -165,9 +160,9 @@ def crowreconnect():
     global crow
     try:
         crow = crowlib.connect()
-        myprint(" <online!>")
+        myprint(" <online!>\n")
     except ValueError as err:
-        myprint(" <lost connection>")
+        myprint(" <lost connection>\n")
 
 
 async def printer():
