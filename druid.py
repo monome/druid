@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import logging.config
 import asyncio
 import crowlib
 import os
@@ -13,12 +14,16 @@ from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import VSplit, HSplit, Window, WindowAlign
+from prompt_toolkit.layout.containers import (
+    VSplit, HSplit,
+    Window, WindowAlign,
+)
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.screen import Char
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.layout.controls import FormattedTextControl
+
 
 # monkey patch to fix https://github.com/monome/druid/issues/8
 Char.display_mappings['\t'] = '  '
@@ -95,7 +100,6 @@ async def shell():
     global crow
     input_field = TextArea(height=1, prompt='> ', style='class:input-field', multiline=False, wrap_lines=False
                            )
-
     captures = VSplit([capture1, capture2])
     container = HSplit([captures, output_field, Window(height=1, char='/', style='class:line', content=FormattedTextControl(text='druid////'), align=WindowAlign.RIGHT
                                                        ), input_field
@@ -178,6 +182,34 @@ async def printer():
 
 
 def main():
+    logging.config.dictConfig({
+        'version': 1,
+        'formatters': {
+            'detailed': {
+                'class': 'logging.Formatter',
+                'format': '%(asctime)s %(name)-15s %(levelname)-8s'
+                '%(processName)-10s %(message)s'
+            },
+        },
+        'handlers': {
+            'file': {
+                'class': 'logging.FileHandler',
+                'filename': 'druid.log',
+                'mode': 'w',
+                'formatter': 'detailed',
+            },
+        },
+        'loggers': {
+            'crowlib': {
+                'handlers': ['file'],
+            },
+        },
+        'root': {
+            'level': 'DEBUG',
+            'handlers': [],
+        },
+    })
+
     global crow
     loop = asyncio.get_event_loop()
 
