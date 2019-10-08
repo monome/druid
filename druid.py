@@ -2,9 +2,10 @@
 
 from __future__ import unicode_literals
 
-import sys
 import asyncio
 import crowlib
+import os
+import sys
 
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -23,7 +24,7 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 Char.display_mappings['\t'] = '  '
 
 druid_intro = "//// druid. q to quit. h for help\n\n"
-druid_help  = """
+druid_help = """
  h            this menu
  r            runs 'sketch.lua'
  u            uploads 'sketch.lua'
@@ -34,25 +35,37 @@ druid_help  = """
 
 """
 
-def druidparser( writer, cmd ):
-    if cmd == "q":
+
+def druidparser(writer, cmd):
+    parts = cmd.split(maxsplit=1)
+    if len(parts) == 0:
+        return
+    c = parts[0]
+    if c == "q":
         raise ValueError("bye.")
-    elif "r " in cmd:
-        crowlib.execute( writer, myprint, cmd[2:] )
-    elif cmd == "r":
-        crowlib.execute( writer, myprint, "./sketch.lua" )
-    elif "u " in cmd:
-        crowlib.upload( writer, myprint, cmd[2:] )
-    elif cmd == "u":
-        crowlib.upload( writer, myprint, "./sketch.lua" )
-    elif cmd == "p":
+    elif c == "r":
+        if len(parts) == 1:
+            crowlib.execute(writer, myprint, "./sketch.lua")
+        elif len(parts) == 2 and os.path.isfile(parts[1]):
+            crowlib.execute(writer, myprint, parts[1])
+        else:
+            writer(bytes(cmd + "\r\n", 'utf-8'))
+    elif c == "u":
+        if len(parts) == 1:
+            crowlib.upload(writer, myprint, "./sketch.lua")
+        elif len(parts) == 2 and os.path.isfile(parts[1]):
+            crowlib.upload(writer, myprint, parts[1])
+        else:
+            writer(bytes(cmd + "\r\n", 'utf-8'))
+    elif c == "p":
         writer(bytes("^^p", 'utf-8'))
-    elif cmd == "h":
+    elif c == "h":
         myprint(druid_help)
     else:
         writer(bytes(cmd + "\r\n", 'utf-8'))
 
-def crowparser( text ):
+
+def crowparser(text):
     if "^^" in text:
         cmds = text.split('^^')
         for cmd in cmds:
@@ -63,41 +76,30 @@ def crowparser( text ):
                 dest = capture1
                 if args[0] == "2":
                     dest = capture2
-                _print( dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
+                _print(dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
             elif len(cmd) > 0:
-                myprint(cmd+'\n')
+                myprint('^^'+cmd+'\n')
     elif len(text) > 0:
         myprint(text+'\n')
 
-capture1 = TextArea( style='class:capture-field'
-                   , height=2
-                   )
-capture2 = TextArea( style='class:capture-field'
-                   , height=2
-                   )
-output_field = TextArea( style='class:output-field'
-                       , text=druid_intro
-                       )
+
+capture1 = TextArea(style='class:capture-field', height=2
+                    )
+capture2 = TextArea(style='class:capture-field', height=2
+                    )
+output_field = TextArea(style='class:output-field', text=druid_intro
+                        )
+
+
 async def shell():
     global crow
-    input_field = TextArea( height=1
-                          , prompt='> '
-                          , style='class:input-field'
-                          , multiline=False
-                          , wrap_lines=False
-                          )
+    input_field = TextArea(height=1, prompt='> ', style='class:input-field', multiline=False, wrap_lines=False
+                           )
 
-    captures = VSplit([ capture1, capture2 ])
-    container = HSplit([ captures
-                       , output_field
-                       , Window( height=1
-                               , char='/'
-                               , style='class:line'
-                               , content=FormattedTextControl( text='druid////' )
-                               , align=WindowAlign.RIGHT
-                               )
-                       , input_field
-                       ])
+    captures = VSplit([capture1, capture2])
+    container = HSplit([captures, output_field, Window(height=1, char='/', style='class:line', content=FormattedTextControl(text='druid////'), align=WindowAlign.RIGHT
+                                                       ), input_field
+                        ])
 
     def cwrite(xs):
         global crow
@@ -108,8 +110,8 @@ async def shell():
 
     def accept(buff):
         try:
-            myprint( '\n> '+input_field.text+'\n' )
-            druidparser( cwrite, input_field.text )
+            myprint('\n> '+input_field.text+'\n')
+            druidparser(cwrite, input_field.text)
         except ValueError as err:
             print(err)
             get_app().exit()
@@ -117,6 +119,7 @@ async def shell():
     input_field.accept_handler = accept
 
     kb = KeyBindings()
+
     @kb.add('c-c', eager=True)
     @kb.add('c-q', eager=True)
     def _(event):
@@ -138,22 +141,25 @@ async def shell():
     )
     result = await application.run_async()
 
+
 def _print(field, st):
-    s = field.text + st.replace('\r','')
-    field.buffer.document = Document( text=s
-                                    , cursor_position=len(s)
-                                    )
+    s = field.text + st.replace('\r', '')
+    field.buffer.document = Document(text=s, cursor_position=len(s)
+                                     )
+
 
 def myprint(st):
-    _print( output_field, st )
+    _print(output_field, st)
+
 
 def crowreconnect():
     global crow
     try:
         crow = crowlib.connect()
-        myprint( " <online!>\n" )
+        myprint(" <online!>\n")
     except ValueError as err:
-        myprint( " <lost connection>\n" )
+        myprint(" <lost connection>\n")
+
 
 async def printer():
     global crow
@@ -164,11 +170,12 @@ async def printer():
             if len(r) > 0:
                 lines = r.decode('ascii').split('\n\r')
                 for line in lines:
-                    crowparser( line )
+                    crowparser(line)
         except:
             sleeptime = 1.0
             crowreconnect()
         await asyncio.sleep(sleeptime)
+
 
 def main():
     global crow
@@ -182,7 +189,7 @@ def main():
 
     # run script passed from command line
     if len(sys.argv) == 2:
-        crowlib.execute( crow.write, myprint, sys.argv[1] )
+        crowlib.execute(crow.write, myprint, sys.argv[1])
 
     use_asyncio_event_loop()
 
@@ -195,5 +202,6 @@ def main():
     crow.close()
     exit()
 
+
 if __name__ == '__main__':
-  main()
+    main()
