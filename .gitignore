@@ -51,10 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-Lib/
-Scripts/
+build/
+dist/
 __pycache__/
 *.log
-pip-selfcheck.json
-pyvenv.cfg
 *~

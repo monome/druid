@@ -1,10 +1,11 @@
 import logging
-import serial
-import serial.tools.list_ports
 import time
 
-logger = logging.getLogger(__name__)
+import serial
+import serial.tools.list_ports
 
+
+logger = logging.getLogger(__name__)
 
 def connect():
     port = ""
@@ -22,7 +23,6 @@ def connect():
         logger.error("could not open comport {}".format(port), e)
         raise ValueError("can't open serial port")
 
-
 def reconnect():
     try:
         c = crow_connect()
@@ -30,7 +30,6 @@ def reconnect():
         return c
     except ValueError as err:
         myprint(" <lost connection>")
-
 
 def writelines(writer, file):
     with open(file) as d:
@@ -47,7 +46,6 @@ def upload(writer, printer, file):
     time.sleep(0.1)  # wait for upload to complete
     writer(bytes("^^w", 'utf-8'))
 
-
 def execute(writer, printer, file):
     printer(" running "+file+"\n\r")
     writer(bytes("^^s", 'utf-8'))
@@ -55,7 +53,6 @@ def execute(writer, printer, file):
     writelines(writer, file)
     time.sleep(0.01)
     writer(bytes("^^e", 'utf-8'))
-
 
 # leaving this here for 'run a code chunk'
 #def execute( writer, printer, file ):

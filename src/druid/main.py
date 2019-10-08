@@ -1,10 +1,5 @@
-#!/usr/bin/env python3
-
-from __future__ import unicode_literals
-
-import logging.config
 import asyncio
-import crowlib
+import logging.config
 import os
 import sys
 
@@ -23,6 +18,8 @@ from prompt_toolkit.layout.screen import Char
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.layout.controls import FormattedTextControl
+
+from druid import crowlib
 
 
 # monkey patch to fix https://github.com/monome/druid/issues/8
@@ -98,12 +95,14 @@ output_field = TextArea(style='class:output-field', text=druid_intro
 
 async def shell():
     global crow
-    input_field = TextArea(height=1, prompt='> ', style='class:input-field', multiline=False, wrap_lines=False
-                           )
+    input_field = TextArea(height=1, prompt='> ', style='class:input-field', multiline=False,
+                           wrap_lines=False)
     captures = VSplit([capture1, capture2])
-    container = HSplit([captures, output_field, Window(height=1, char='/', style='class:line', content=FormattedTextControl(text='druid////'), align=WindowAlign.RIGHT
-                                                       ), input_field
-                        ])
+    container = HSplit([captures, output_field,
+                        Window(height=1, char='/', style='class:line',
+                               content=FormattedTextControl(text='druid////'),
+                               align=WindowAlign.RIGHT),
+                        input_field])
 
     def cwrite(xs):
         global crow
@@ -133,7 +132,7 @@ async def shell():
         ('capture-field', '#747369'),
         ('output-field', '#d3d0c8'),
         ('input-field', '#f2f0ec'),
-        ('line',        '#747369'),
+        ('line', '#747369'),
     ])
 
     application = Application(
@@ -188,7 +187,7 @@ def main():
             'detailed': {
                 'class': 'logging.Formatter',
                 'format': '%(asctime)s %(name)-15s %(levelname)-8s'
-                '%(processName)-10s %(message)s'
+                          '%(processName)-10s %(message)s'
             },
         },
         'handlers': {
