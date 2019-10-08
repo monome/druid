@@ -31,7 +31,8 @@ source Scripts/activate  # need to do this each time you run a new shell
 # other
 source bin/activate  # need to do this each time you run a new shell
 
-python3 druid.py
+pip install -r requirements.txt
+python druid.py
 ```
 
 ## druid
