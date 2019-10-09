@@ -1,4 +1,6 @@
-import crowlib
+#!/usr/bin/env python3
+
+from druid import crowlib
 
 
 def main():
@@ -13,6 +15,5 @@ def main():
 
     crow.close()
     exit()
-
 
 main()

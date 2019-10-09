@@ -1,11 +1,13 @@
+#!/usr/bin/env python3
+
 import sys
-import crowlib
 import time
+
+from druid import crowlib
 
 
 def myprint(st):
     print(st)
-
 
 def main():
     try:
@@ -27,6 +29,5 @@ def main():
 
     crow.close()
     exit()
-
 
 main()

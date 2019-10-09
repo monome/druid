@@ -1,5 +1,0 @@
-asyncio==3.4.3
-prompt-toolkit==2.0.10
-pyserial==3.4
-six==1.12.0
-wcwidth==0.1.7
