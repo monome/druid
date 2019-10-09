@@ -5,12 +5,12 @@ import time
 
 import click
 
-from druid import crowlib
+from druid import __version__, crowlib
 from druid import repl as druid_repl
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-@click.version_option()
+@click.version_option(__version__)
 def cli(ctx):
     """ Terminal interface for crow """
     if ctx.invoked_subcommand is None:
