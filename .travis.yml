@@ -1,0 +1,55 @@
+os:
+  - windows
+  - linux
+  - osx
+language: shell
+deploy:
+  api_key: see https://docs.travis-ci.com/user/encryption-keys/
+  provider: releases
+  skip_cleanup: true
+  on:
+    tags: true
+
+matrix:
+  include:
+    - name: 'windows python setup'
+      os: windows
+      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+      before_install:
+        - choco install python
+      install:
+        - pip install pyinstaller
+        - pip install .
+      script:
+        - pyinstaller -n druid src/druid/main.py
+        - dir ./dist/druid/druid.exe
+        - zip -r druid.zip ./dist/druid
+      deploy:
+        file: druid.zip
+
+    - name: 'linux python setup'
+      os: linux
+      language: python
+      install:
+        - pip3 install pyinstaller
+        - pip3 install .
+      script:
+        - pyinstaller -n druid src/druid/main.py
+        - ls ./dist/druid/druid
+        - tar czvf druid.tar.gz ./dist/druid
+      deploy:
+        file: druid.tar.gz
+
+    - name: 'osx python setup'
+      os: osx
+      before_install:
+        - brew upgrade python
+      install:
+        - pip3 install pyinstaller
+        - pip3 install .
+      script:
+        - pyinstaller -n druid src/druid/main.py
+        - ls ./dist/druid/druid
+        - tar czvf druid.tar.gz ./dist/druid
+      deploy:
+        file: druid.tar.gz
