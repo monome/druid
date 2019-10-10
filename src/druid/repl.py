@@ -180,7 +180,7 @@ async def printer():
         await asyncio.sleep(sleeptime)
 
 
-def main():
+def main(script=None):
     logging.config.dictConfig({
         'version': 1,
         'formatters': {
@@ -210,17 +210,17 @@ def main():
     })
 
     global crow
-    loop = asyncio.get_event_loop()
-
     try:
         crow = crowlib.connect()
     except ValueError as err:
         print(err)
-        exit()
+        sys.exit()
 
     # run script passed from command line
-    if len(sys.argv) == 2:
-        crowlib.execute(crow.write, myprint, sys.argv[1])
+    if script:
+        crowlib.execute(crow.write, myprint, script)
+
+    loop = asyncio.get_event_loop()
 
     use_asyncio_event_loop()
 
@@ -231,8 +231,4 @@ def main():
         loop.run_until_complete(background_task)
 
     crow.close()
-    exit()
-
-
-if __name__ == '__main__':
-    main()
+    sys.exit()
