@@ -24,8 +24,10 @@ setup(
     include_package_data=True,
     python_requires=">=3.5",
     install_requires=[
+        "anyconfig>=0.9.10",
         "prompt-toolkit>=2.0.10",
         "pyserial>=3.4",
+        "PyYAML>=5.1.2",
     ],
     extras_require={
         "test": [
