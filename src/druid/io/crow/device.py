@@ -11,10 +11,6 @@ logger = logging.getLogger(__name__)
 class Crow:
     DEVICE_ID = "USB VID:PID=0483:5740"
 
-    def __enter__(self):
-        self.connect()
-        return self
-
     def connect(self, on_connect=None):
         try:
             self.serial = SerialDevice.find(self.DEVICE_ID)
@@ -24,8 +20,8 @@ class Crow:
             if on_connect is not None:
                 on_connect(self.serial)
 
-    def __exit__(self, type, exc, traceback):
-        logger.info('crow disconnecting:', exc)
+    def close(self):
+        self.serial.close()
 
     def read(self, count):
         buf = self.serial.read(count)
@@ -49,21 +45,27 @@ class Crow:
                 self.write(line)
                 time.sleep(0.002)  # fix os x crash?
 
-    def script(self, script_file, cmd):
+    def script(self, tty, script_file, cmd):
         self.write('^^s'),
         time.sleep(0.2)  # wait for allocation
+        tty.show(' file uploaded: {}'.format(script_file))
         self.writefile(script_file)
         time.sleep(0.2)  # wait for upload to complete
         self.write(cmd)
 
     def upload(self, tty, script_file):
         tty.show(' uploading {}\n\r'.format(script_file))
-        self.script(script_file, '^^w')
+        self.script(tty, script_file, '^^w')
 
     def execute(self, tty, script_file):
         tty.show(' running {}\n\r'.format(script_file))
-        self.script(script_file, '^^e')
+        self.script(tty, script_file, '^^e')
 
+    def dump(self):
+        self.writeline("^^p")
+        return self.read(1000000).decode()
+
+        
 
 class CrowParser:
     def __init__(self, tty, event_handlers):
@@ -85,7 +87,7 @@ class CrowParser:
                     continue
                 x = t3[0]
                 args = t3[2].rstrip(')').partition(',')
-                logger.debug("event '{}', args {}".format(evt, args))
+
                 curr = self.event_handlers
                 for cmp in evt.split('.'):
                     try:

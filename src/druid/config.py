@@ -15,6 +15,9 @@ sources:
   scripts:
     - https://github.com/monome/bowery
 
+scripts:
+  default: sketch.lua
+
 logging:
   version: 1
   disable_existing_loggers: False

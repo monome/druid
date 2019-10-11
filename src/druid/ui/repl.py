@@ -169,7 +169,7 @@ class DruidRepl:
             print('bye.')
             get_app().exit()
         except Exception as e:
-            logging.error(
+            logger.error(
                 'error processing input',
                 text,
                 e,

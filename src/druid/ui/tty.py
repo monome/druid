@@ -2,6 +2,14 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.widgets import TextArea
 
 
+class FuncTTY:
+    def __init__(self, show_func):
+        self.show_func = show_func
+
+    def show(self, s):
+        self.show_func(s)
+
+
 class TextAreaTTY:
     def __init__(self, textarea: TextArea):
         self.textarea = textarea

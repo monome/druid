@@ -8,9 +8,11 @@ import time
 
 import click
 
-from druid import crowlib
 from druid.config import DruidConfig
+from druid.io.crow.device import Crow
+from druid.io.device import DeviceNotFoundError
 from druid.ui import repl as druid_repl
+from druid.ui.tty import FuncTTY
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -25,13 +27,14 @@ def download():
     """
     Download a file from crow and print it to stdout
     """
+    crow = Crow()
     try:
-        crow = crowlib.connect()
-    except ValueError as err:
+        crow.connect()
+    except DeviceNotFoundError as err:
         click.echo(err)
         sys.exit(1)
 
-    crow.write(bytes("^^p", "utf-8"))
+    crow.write("^^p", "utf-8")
     click.echo(crow.read(1000000).decode())
     crow.close()
 
@@ -45,19 +48,18 @@ def upload(filename):
     Upload a file to crow.
     FILENAME is the path to the Lua file to upload
     """
+    crow = Crow()
+    tty = FuncTTY(click.echo)
     try:
-        crow = crowlib.connect()
-    except ValueError as err:
+        crow.connect()
+    except DeviceNotFoundError as err:
         click.echo(err)
         sys.exit(1)
 
-    crowlib.upload(crow.write, myprint, filename)
-    click.echo(crow.read(1000000).decode())
-    click.echo("File uploaded")
-    time.sleep(0.5) # wait for new script to be ready
-    crow.write(bytes("^^p", "utf-8"))
-    click.echo(crow.read(1000000).decode())
-    crow.close()
+    crow.upload(tty, filename)
+    time.sleep(0.5)
+    click.echo('\n')
+    click.echo(crow.dump())
 
 @cli.command()
 @click.argument("filename", type=click.Path(exists=True), required=False)
