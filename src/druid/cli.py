@@ -8,9 +8,9 @@ import time
 
 import click
 
-from druid.config import DruidConfig
 from druid import crowlib
-from druid import repl as druid_repl
+from druid.config import DruidConfig
+from druid.ui import repl as druid_repl
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -73,4 +73,4 @@ def repl(filename):
     os.makedirs('./logs', exist_ok=True)
     logging.config.dictConfig(config['logging'])
 
-    druid_repl.main(script=filename)
+    druid_repl.run(config, script=filename)

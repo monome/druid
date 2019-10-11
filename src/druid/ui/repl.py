@@ -20,6 +20,7 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 
 from druid.io.crow.device import Crow
 from druid.ui.cli import CLICommand
+from druid.ui.tty import TextAreaTTY
 
 
 logger = logging.getLogger(__name__)
@@ -28,39 +29,25 @@ logger = logging.getLogger(__name__)
 Char.display_mappings['\t'] = '  '
 
 
-class DruidShellCLI(CLICommand):
-    '''
-    druid <-> crow interactive shell
-    '''
+def run(config, script=None):
+    loop = asyncio.get_event_loop()
+    with Crow() as crow:
+        if script is not None:
+            crow.execute(script)
 
-    def register(self, parser):
-        parser.add_argument(
-            'script',
-            nargs='?',
-            type=FileType,
-            help='script to execute before starting shell',
-        )
+        use_asyncio_event_loop()
+        with patch_stdout():
+            shell = DruidRepl(crow, config)
+            background_task = asyncio.gather(
+                *shell.background(),
+                return_exceptions=True,
+            )
+            loop.run_until_complete(shell.foreground())
+            background_task.cancel()
+            loop.run_until_complete(background_task)
 
-    def __call__(self, args, config):
-        loop = asyncio.get_event_loop()
-        with Crow() as crow:
-            if args.script is not None:
-                crow.execute(args.script)
-
-            use_asyncio_event_loop()
-            with patch_stdout():
-                shell = DruidShell(crow, DruidParser(config))
-                background_task = asyncio.gather(
-                    *shell.background(),
-                    return_exceptions=True,
-                )
-                loop.run_until_complete(shell.foreground())
-                background_task.cancel()
-                loop.run_until_complete(background_task)
-
-class DruidShell:
-    DRUID_INTRO = '//// druid. q to quit. h for help\n\n'
-    DRUID_HELP = '''
+DRUID_INTRO = '//// druid. q to quit. h for help\n\n'
+DRUID_HELP = '''
  h            this menu
  r            runs 'sketch.lua'
  u            uploads 'sketch.lua'
@@ -71,10 +58,17 @@ class DruidShell:
 
 '''
 
-    def __init__(self, crow, input_parser):
+class DruidRepl:
+
+    def __init__(self, crow, config):
         self.crow = crow
-        self.input_parser = input_parser
         self.layout()
+        self.tty = TextAreaTTY(self.output_field)
+        self.input_parser = DruidParser(
+            self.crow,
+            self.tty,
+            config,
+        )
 
     def layout(self):
         self.input_field = TextArea(
@@ -88,7 +82,7 @@ class DruidShell:
         self.input_field.accept_handler = self.accept_input
         self.capture1 = TextArea(style='class:capture-field', height=2)
         self.capture2 = TextArea(style='class:capture-field', height=2)
-        self.output_field = TextArea(style='class:output-field', text=self.DRUID_INTRO)
+        self.output_field = TextArea(style='class:output-field', text=DRUID_INTRO)
         captures = VSplit([self.capture1, self.capture2])
         container = HSplit([
             captures, 
@@ -133,29 +127,59 @@ class DruidShell:
 
     def accept_input(self, buf):
         text = self.input_field.text
-        self.show(self.output_field, '\n> {}\n'.format(text))
+        self.tty.show('\n> {}\n'.format(text))
         try:
             self.input_parser.parse(text)
-        except DruidShellError as e:
+        except ExitDruid:
+            print('bye.')
+            get_app().exit()
+        except Exception as e:
             logger.error(
                 'error processing input',
                 text,
                 e,
             )
-            self.app.exit()
-
-    def show(self, field, st):
-        s = field.text + st.replace('\r', '')
-        field.buffer.document = Document(text=s, cursor_position=len(s))
-
 
 class DruidParser:
-    def __init__(self, crow):
+
+    def __init__(self, crow, tty, config):
         self.crow = crow
+        self.tty = tty
+        try:
+            self.default_script = config['scripts']['default']
+        except KeyError:
+            self.default_script = "./sketch.lua"
 
     def parse(self, s):
-        pass
+        parts = s.split(maxsplit=1)
+        if len(parts) == 0:
+            return
+        c = parts[0]
+        if c == "q":
+            raise ExitDruid
+        elif c == "r":
+            if len(parts) == 1:
+                self.crow.execute(self.tty, self.default_script)
+                return
+            elif len(parts) == 2 and os.path.isfile(parts[1]):
+                self.crow.execute(self.tty, parts[1])
+                return
+        elif c == "u":
+            if len(parts) == 1:
+                self.crow.upload(self.tty, self.default_script)
+                return
+            elif len(parts) == 2 and os.path.isfile(parts[1]):
+                self.crow.upload(self.tty, parts[1])
+                return
+        elif c == "p":
+            self.crow.cmd(self.tty, "^^p")
+            return
+        elif c == "h":
+            self.tty.show(DRUID_HELP)
+            return
+        
+        self.crow.write(s + "\r\n")
 
 
-class DruidParseError(Exception):
+class ExitDruid(Exception):
     pass
