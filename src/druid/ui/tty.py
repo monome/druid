@@ -6,9 +6,9 @@ class TextAreaTTY:
     def __init__(self, textarea: TextArea):
         self.textarea = textarea
 
-    def show(self, s):
-        s = self.textarea.text + s.replace('\r', '')
+    def show(self, s, fmt=lambda s: s):
+        s = self.textarea.text + fmt(s.replace('\r', ''))
         self.textarea.buffer.document = Document(
-            text=s, 
+            text=s,
             cursor_position=len(s),
         )

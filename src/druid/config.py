@@ -23,9 +23,15 @@ logging:
       format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
   handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: simple
+      stream: ext://sys.stdout
+
     file:
       class: logging.handlers.RotatingFileHandler
-      level: INFO
+      level: DEBUG
       formatter: simple
       filename: logs/druid.log
       maxBytes: 10485760 # 10MB
@@ -46,9 +52,9 @@ logging:
       level: DEBUG
       propagate: no
 
-  root:
-    level: INFO
-    handlers: [file, error_file]
+    root:
+      level: DEBUG
+      handlers: [console, file, error_file]
 '''
 
 
