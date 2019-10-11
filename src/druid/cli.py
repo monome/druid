@@ -1,10 +1,14 @@
 """ Command-line interface for druid """
 
+import logging
+import logging.config
+import os
 import sys
 import time
 
 import click
 
+from druid.config import DruidConfig
 from druid import crowlib
 from druid import repl as druid_repl
 
@@ -59,4 +63,14 @@ def upload(filename):
 @click.argument("filename", type=click.Path(exists=True), required=False)
 def repl(filename):
     """ Start interactive terminal """
-    druid_repl.main(filename)
+
+    config = DruidConfig([
+        os.path.expanduser("~/druid.yml"),
+        os.path.expanduser("~/.druid.yml"),
+        os.path.realpath("druid.yml"),
+        os.path.realpath(".druid.yml"),
+    ])
+    os.makedirs('./logs', exist_ok=True)
+    logging.config.dictConfig(config['logging'])
+
+    druid_repl.main(script=filename)

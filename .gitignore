@@ -54,5 +54,10 @@ dkms.conf
 build/
 dist/
 __pycache__/
+.venv/
+*.egg-info/
+*.bak
 *.log
 *~
+*#
+logs/

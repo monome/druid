@@ -181,40 +181,13 @@ async def printer():
 
 
 def main(script=None):
-    logging.config.dictConfig({
-        'version': 1,
-        'formatters': {
-            'detailed': {
-                'class': 'logging.Formatter',
-                'format': '%(asctime)s %(name)-15s %(levelname)-8s'
-                          '%(processName)-10s %(message)s'
-            },
-        },
-        'handlers': {
-            'file': {
-                'class': 'logging.FileHandler',
-                'filename': 'druid.log',
-                'mode': 'w',
-                'formatter': 'detailed',
-            },
-        },
-        'loggers': {
-            'crowlib': {
-                'handlers': ['file'],
-            },
-        },
-        'root': {
-            'level': 'DEBUG',
-            'handlers': [],
-        },
-    })
 
     global crow
     try:
         crow = crowlib.connect()
     except ValueError as err:
         print(err)
-        sys.exit()
+        sys.exit(1)
 
     # run script passed from command line
     if script:
@@ -231,4 +204,3 @@ def main(script=None):
         loop.run_until_complete(background_task)
 
     crow.close()
-    sys.exit()
