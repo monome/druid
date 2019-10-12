@@ -18,6 +18,21 @@ sources:
 scripts:
   default: sketch.lua
 
+ui:
+  style:
+    'capture-field': '#747369'
+    'output-field': '#d3d0c8'
+    'input-field': '#f2f0ec'
+    'line': '#747369'
+  captures:
+    - on_inputs: [1]
+      stream: 'input[{args[0]}] = {args[1]}'
+      change: 'input[{args[0]}] = {args[1]}'
+    - on_inputs: [2]
+      stream: 'input[{args[0]}] = {args[1]}'
+      change: 'input[{args[0]}] = {args[1]}'
+    - ii: '{line}'
+
 logging:
   version: 1
   disable_existing_loggers: False
@@ -37,8 +52,8 @@ logging:
       level: DEBUG
       formatter: simple
       filename: logs/druid.log
-      maxBytes: 10485760 # 10MB
-      backupCount: 20
+      maxBytes: 65535
+      backupCount: 2
       encoding: utf8
 
     error_file:
@@ -46,18 +61,19 @@ logging:
       level: ERROR
       formatter: simple
       filename: logs/errors.log
-      maxBytes: 10485760 # 10MB
-      backupCount: 20
+      maxBytes: 65535
+      backupCount: 2
       encoding: utf8
 
   loggers:
     druid:
-      level: DEBUG
-      propagate: no
+      level: INFO
+      handlers: [file, error_file]
 
     root:
       level: DEBUG
-      handlers: [console, file, error_file]
+      propagate: no
+      handlers: [file, error_file]
 '''
 
 
@@ -68,3 +84,7 @@ class DruidConfig:
 
     def __getitem__(self, key):
         return self.config[key]
+
+
+class DruidConfigError(Exception):
+    pass

@@ -24,15 +24,13 @@ class Crow:
         self.serial.close()
 
     def read(self, count):
-        buf = self.serial.read(count)
-        logger.debug('read: {}'.format(repr(buf)))
-        return buf
+        return self.serial.read(count)
 
     def write(self, s):
         try:
             self.serial.write(s)
         except Exception as exc:
-            logger.error(exc)
+            logger.error('error during write: {}'.format(exc))
             self.connect()
 
     def writeline(self, s):
@@ -83,19 +81,35 @@ class CrowParser:
             cmds = line.split('^^')
             for cmd in cmds:
                 t3 = cmd.rstrip().partition('(')
-                if len(t3) != 3:
+                if not any(t3):
                     continue
-                x = t3[0]
-                args = t3[2].rstrip(')').partition(',')
+                evt = t3[0]
+                args = t3[2].rstrip(')').split(',')
 
-                curr = self.event_handlers
-                for cmp in evt.split('.'):
-                    try:
-                        curr = curr[cmp]
-                    except KeyError:
-                        break
-                    else:
-                        if hasattr(curr, '__call__'):
-                            return curr(line, evt, args)
+                self.handle_event(line, evt, args)
         elif len(line) > 0:
             self.tty.show(line + '\n')
+
+    def handle_event(self, line, evt, args):
+        curr = self.event_handlers
+        for cmp in evt.split('.'):
+            try:
+                curr = curr[cmp]
+            except KeyError:
+                break
+            else:
+                logger.debug('found handler: {}'.format(curr))
+                if hasattr(curr, '__call__'):
+                    logger.debug('found handler: {} {}'.format(evt, curr))
+                    return curr(line, evt, args)
+                if isinstance(curr, list):
+                    logger.debug('args: {}'.format(args))
+                    try:
+                        ch = int(args[0])
+                    except ValueError:
+                        pass
+                    else:
+                        if len(args) > 0 and 1 <= ch <= len(curr):
+                            if hasattr(curr[ch - 1], '__call__'):
+                                logger.debug('found handler: {} {}'.format(evt, curr[ch - 1]))
+                                return curr[ch - 1](line, evt, args)

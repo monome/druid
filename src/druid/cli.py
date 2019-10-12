@@ -11,8 +11,12 @@ import click
 from druid.config import DruidConfig
 from druid.io.crow.device import Crow
 from druid.io.device import DeviceNotFoundError
-from druid.ui import repl as druid_repl
+from druid.ui.repl import core as druid_repl
 from druid.ui.tty import FuncTTY
+
+
+logger = logging.getLogger(__name__)
+
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -37,9 +41,6 @@ def download():
     crow.write("^^p", "utf-8")
     click.echo(crow.read(1000000).decode())
     crow.close()
-
-def myprint(string):
-    click.echo(string)
 
 @cli.command(short_help="Upload a file to crow")
 @click.argument("filename", type=click.Path(exists=True))

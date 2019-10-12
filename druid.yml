@@ -1,7 +1,5 @@
-# # configuration for druid development
-# logging:
-#   root:
-#     level: DEBUG
-#   handlers:
-#     file:
-#       level: DEBUG
+# configuration for druid development
+logging:
+  loggers:
+    druid:
+      level: DEBUG
