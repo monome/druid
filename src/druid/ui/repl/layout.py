@@ -12,7 +12,7 @@ from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.layout.controls import FormattedTextControl
 
 from druid.config import DruidConfigError
-from druid.ui.tty import TextAreaTTY
+from druid.ui.tty import FuncTTY, TextAreaTTY
 
 
 # monkey patch to fix https://github.com/monome/druid/issues/8
@@ -74,10 +74,10 @@ class DruidReplLayout:
 
     def test_format(self, fmt):
         try:
-            fmt.format(
-                line='event(1, 2)',
-                evt='event',
-                args=['1', '2'],
+            self.capture_format_handler(FuncTTY(lambda s: None), fmt)(
+                'event(1, 2)',
+                'event',
+                ['1', '2'],
             )
         except:
             raise DruidConfigError(
@@ -136,8 +136,8 @@ class DruidReplLayout:
     def capture_format_handler(self, tty, fmt):
         def _handler(line, evt, args):
             tty.show('\n' + fmt.format(
-                line=line, 
-                evt=evt, 
+                line=line.strip().strip('^^'),
+                event=evt,
                 args=args,
             ) + '\n')
         return _handler
@@ -145,11 +145,7 @@ class DruidReplLayout:
     def bind_nested_captures(self, events, cfg, tty, breadcrumb):
         if isinstance(cfg, str):
             self.test_format(cfg)
-            return lambda line, evt, args: tty.show(cfg.format(
-                line=line,
-                evt=evt,
-                args=args,
-            ))
+            return self.capture_format_handler(tty, cfg)
         elif isinstance(cfg, dict):
             return {
                 self.bind_nested_captures(
