@@ -43,25 +43,21 @@ def druidparser(writer, cmd):
     if len(parts) == 0:
         return
     c = parts[0]
-    if c == "q":
+    if c == "q" and len(parts[0]) == 1:
         raise ValueError("bye.")
     elif c == "r":
-        if len(parts) == 1:
-            crowlib.execute(writer, myprint, "./sketch.lua")
-        elif len(parts) == 2 and os.path.isfile(parts[1]):
+        if len(parts) == 2 and os.path.isfile(parts[1]):
             crowlib.execute(writer, myprint, parts[1])
         else:
             writer(bytes(cmd + "\r\n", 'utf-8'))
     elif c == "u":
-        if len(parts) == 1:
-            crowlib.upload(writer, myprint, "./sketch.lua")
-        elif len(parts) == 2 and os.path.isfile(parts[1]):
+        if len(parts) == 2 and os.path.isfile(parts[1]):
             crowlib.upload(writer, myprint, parts[1])
         else:
             writer(bytes(cmd + "\r\n", 'utf-8'))
-    elif c == "p":
+    elif c == "p" and len(parts[0]) == 1:
         writer(bytes("^^p", 'utf-8'))
-    elif c == "h":
+    elif c == "h" and len(parts[0]) == 1:
         myprint(druid_help)
     else:
         writer(bytes(cmd + "\r\n", 'utf-8'))
