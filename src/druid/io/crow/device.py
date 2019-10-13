@@ -100,19 +100,19 @@ class Crow(CrowBase):
 
 class CrowAsync(CrowBase):
 
-    def connect(self, tty=None, handlers=None):
-        self.tty = tty or FuncTTY(lambda s: None)
+    def connect(self):
+        # self.tty = tty or FuncTTY(lambda s: None)
         self.handlers = {
             'connect': self.on_connect,
             'disconnect': self.on_disconnect,
             # 'data': self.on_data,
         }
-        if handlers is not None:
-            self.handlers.update(handlers)
+        # if handlers is not None:
+        #     self.handlers.update(handlers)
         try:
             self.serial = AsyncSerialDevice.find(
                 self.DEVICE_ID, 
-                handlers=handlers,
+                handlers=self.handlers,
             )
         except DeviceNotFoundError:
             raise DeviceNotFoundError('crow device not found')
@@ -127,6 +127,8 @@ class CrowAsync(CrowBase):
         self.serial.write(bytes(s, 'utf-8'))
 
     async def listen(self, parser):
+        self.connect()
+        logger.debug('ran connect, starting listen')
         await self.serial.listen(parser)
 
     def writeline(self, s):

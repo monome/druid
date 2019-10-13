@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def run(config, script=None):
     loop = asyncio.get_event_loop()
-    crow = Crow()
+    crow = CrowAsync()
     try:
         crow.connect()
     except DeviceNotFoundError as exc:

@@ -11,6 +11,33 @@ from druid.io.device import DeviceNotFoundError
 logger = logging.getLogger(__name__)
 
 
+
+@asyncio.coroutine
+def open_serial_connection(port,
+                           loop=None, limit=asyncio.streams._DEFAULT_LIMIT,
+                           handlers=None,
+                           **kwargs):
+    logger.debug('opening serial connection');
+    if loop is None:
+        loop = asyncio.get_event_loop()
+    logger.debug('got event loop: {}'.format(loop))
+    reader = asyncio.StreamReader(limit=limit, loop=loop)
+    protocol = SerialReaderProtocol(
+        reader,
+        loop=loop,
+        handlers=handlers,
+    )
+    logger.debug('creating connection: {}'.format(port.device))
+    transport, _ = yield from create_serial_connection(
+        url=port.device,
+        loop=loop,
+        protocol_factory=lambda: protocol,
+        **kwargs,
+    )
+    writer = asyncio.StreamWriter(transport, protocol, reader, loop)
+    return (reader, writer)
+
+
 class SerialDevice:
 
     @classmethod
@@ -60,9 +87,9 @@ class SerialDevice:
 class SerialProtocolBase(asyncio.Protocol):
     def __init__(self, handlers=None):
         self.handlers = {
-            'connect': lambda r: None,
-            'disconnect': lambda r, exc: None,
-            'data': lambda r, s: None,
+            'connect': lambda evt, p, t: None,
+            'disconnect': lambda evt, p, exc: None,
+            'data': lambda evt, p, s: None,
         }
         if handlers is not None:
             self.handlers.update(handlers)
@@ -137,10 +164,9 @@ class SerialReaderProtocol(asyncio.StreamReaderProtocol):
 
 class AsyncSerialDevice(SerialDevice):
     
-    def __init__(self, port, terminator=b'\n\r', **kwargs):
-                 # port, baudrate=115200, timeout=0.1,
-                 # terminator=b'\n\r',
-                 # loop=None, handlers=None):
+    def __init__(self, port,
+                 terminator=b'\n\r', handlers=None,
+                 **kwargs):
         # super().__init__(
         #     port, 
         #     baudrate=baudrate,
@@ -148,57 +174,58 @@ class AsyncSerialDevice(SerialDevice):
         #     handlers=handlers,
         # )
         self.port = port
-        self.kwargs = kwargs
+        self.serial_kwargs = dict(baudrate=115200, timeout=0.1)
         self.terminator = terminator
-        # self.reader, self.writer = self.open_serial_connection(
-        #     port.device,
-        #     baudrate=baudrate,
-        #     timeout=timeout,
-        #     handlers=handlers,
-        #     loop=loop,
-        # )
+        self.handlers = handlers
+        self._writeq = asyncio.Queue()
 
-    @asyncio.coroutine
-    def open_serial_connection(self, 
-                               port, 
-                               loop=None, limit=asyncio.streams._DEFAULT_LIMIT,
-                               handlers=None, 
-                               **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        reader = asyncio.StreamReader(limit=limit, loop=loop)
-        protocol = SerialReaderProtocol(
-            reader, 
-            loop=loop,
-            handlers=handlers,
-        )
-        transport, _ = yield from create_serial_connection(
-            url=port.device,
-            loop=loop,
-            protocol_factory=lambda: protocol,
-            **kwargs,
-        )
-        writer = asyncio.StreamWriter(transport, protocol, reader, loop)
-        return (reader, writer)
+    # async def connect(self):
+    #     self.reader, self.writer = await self.open_serial_connection(
+    #         self.port,
+    #         handlers=self.handlers,
+    #         **self.serial_kwargs,
+    #     )
 
-    async def listen(self, parser):
+    async def listen(self, parser): # , on_connect, on_disconnect
+#    ):
         while True:
-            logger.debug('attempting to connect to port: {}'.format(self.port))
-            self.reader, self.writer = await self.open_serial_connection(self.port, **self.kwargs)
-            async for packet in self.recv(self.reader):
-                parser.parse(packet)
+            logger.debug('port {}, kwargs {}'.format(self.port, self.serial_kwargs))
+            try:
+                reader, writer = await open_serial_connection(
+                    self.port,
+                    handlers=self.handlers,
+                    **self.serial_kwargs,
+                )
+            except Exception as exc:
+                logger.debug('wtf: {}'.format(exc))
+                raise
+            else:
+                logger.debug('build reader {} and writer {}'.format(reader, writer))
+                await asyncio.wait([
+                    self.send(writer),
+                    self.recv(reader, parser),
+                ])
 
     def write(self, b):
-        # b = bytes(s, encoding)
-        logger.debug('-> device {}: {}'.format(self.port.device, b))
-        self.writer.write(b)
+        logger.debug('enqueue message to q {}: {}'.format(self._writeq, b))
+        self._writeq.put_nowait(b)
+        logger.debug('message enqueued')
 
-    async def recv(self, reader):
+    async def send(self, writer):
+        logging.debug('starting send')
+        while True:
+            logger.debug('try to dq from: {}'.format(self._writeq))
+            b = await self._writeq.get()
+            logger.debug('-> device {}: {}'.format(self.port.device, b))
+            writer.write(b)
+
+    async def recv(self, reader, parser):
+        logging.debug('starting recv')
         while True:
             try:
                 b = await reader.readuntil(self.terminator)
                 logger.debug('<- device {}: {}'.format(self.port.device, b))
-                yield b
+                parser.parse(b)
             except Exception as e:
                 logger.debug('error during read: {}'.format(e))
                 return
