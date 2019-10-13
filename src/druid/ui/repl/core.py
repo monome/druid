@@ -3,13 +3,14 @@ import asyncio
 import logging
 import os
 import sys
+import traceback
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
 
 from druid.config import DruidConfigError
-from druid.io.crow.device import Crow, CrowParser
+from druid.io.crow.device import Crow, CrowAsync, CrowParser
 from druid.io.device import DeviceNotFoundError
 from druid.ui.repl.layout import DruidReplLayout
 from druid.ui.tty import TextAreaTTY
@@ -72,9 +73,11 @@ class DruidRepl:
             self.tty,
             event_handlers=self.layout.capture_handlers,
         )
+        self.crow.attach(self.tty)
             
     def background(self):
-        yield self.process_crow_output()
+        yield self.crow.listen(self.crow_parser)
+        # yield self.process_crow_output()
 
     def foreground(self):
         return self.layout.application.run_async()
@@ -92,24 +95,9 @@ class DruidRepl:
             logger.error(
                 'error processing input: {}\n{}'.format(
                     text,
-                    e,
+                    traceback.format_exc(),
                 )
             )
-
-    async def process_crow_output(self):
-        while True:
-            sleeptime = 0.001
-            try:
-                r = self.crow.read(10000)
-            except SerialException as exc:
-                self.tty.show(' <lost connection>')
-                sleeptime = 1.0
-                logger.info('lost connection: {}'.format(exc))
-                self.crow.connect(self.on_connect)
-            else:
-                if len(r) > 0:
-                    self.crow_parser.parse(r)
-            await asyncio.sleep(sleeptime)
 
     def on_connect(self):
         self.tty.show(' <connected!>')

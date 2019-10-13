@@ -28,6 +28,7 @@ setup(
         "Click>=7.0",
         "prompt-toolkit>=2.0.10",
         "pyserial>=3.4",
+        "pyserial-asyncio>=0.4",
         "PyYAML>=5.1.2",
     ],
     extras_require={
