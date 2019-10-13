@@ -4,7 +4,11 @@ import logging
 import time
 
 from druid.io.device import DeviceNotFoundError
-from druid.io.serial.device import AsyncSerialDevice, SerialDevice
+from druid.io.serial.device import (
+    find_serial_device,
+    AsyncSerialDevice,
+    SerialDevice,
+)
 from druid.ui.tty import FuncTTY
 
 
@@ -13,6 +17,13 @@ logger = logging.getLogger(__name__)
 
 class CrowBase(ABC):
     DEVICE_ID = "USB VID:PID=0483:5740"
+
+    @classmethod
+    def find_device(cls):
+        try:
+            find_serial_device(cls.DEVICE_ID)
+        except DeviceNotFoundError:
+            raise DeviceNotFoundError('crow not found')
 
     def __init__(self, tty=None):
         if tty is None:
@@ -100,20 +111,18 @@ class Crow(CrowBase):
 
 class CrowAsync(CrowBase):
 
+    def __init__(self):
+        self.serial = AsyncSerialDevice(
+            self.DEVICE_ID,
+            handlers={
+                'connect': self.on_connect,
+                'disconnect': self.on_disconnect,
+            },
+        )
+
     def connect(self):
-        # self.tty = tty or FuncTTY(lambda s: None)
-        self.handlers = {
-            'connect': self.on_connect,
-            'disconnect': self.on_disconnect,
-            # 'data': self.on_data,
-        }
-        # if handlers is not None:
-        #     self.handlers.update(handlers)
         try:
-            self.serial = AsyncSerialDevice(
-                self.DEVICE_ID, 
-                handlers=self.handlers,
-            )
+            self.find_device(self.DEVICE_ID)
         except DeviceNotFoundError:
             raise DeviceNotFoundError('crow device not found')
 
@@ -127,7 +136,6 @@ class CrowAsync(CrowBase):
         self.serial.write(bytes(s, 'utf-8'))
 
     async def listen(self, parser):
-        self.connect()
         logger.debug('ran connect, starting listen')
         await self.serial.listen(parser)
 
@@ -162,12 +170,15 @@ class CrowParser:
 
 
     def parse(self, s):
-        lines = s.decode('ascii').split('\n\r')
+        logger.debug('raw line from device: {}'.format(repr(s)))
+        lines = s.decode('ascii').splitlines()
         for line in lines:
-            self.parse_line(line)
+            line = line.strip()
+            if len(line) > 0:
+                logger.debug('processed line: {}'.format(repr(line)))
+                self.parse_line(line)
 
     def parse_line(self, line):
-        logger.debug('line from device: {}'.format(line))
         if "^^" in line:
             cmds = line.split('^^')
             for cmd in cmds:

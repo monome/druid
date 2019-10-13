@@ -12,6 +12,7 @@ from druid.io.device import DeviceNotFoundError
 
 logger = logging.getLogger(__name__)
 
+# some tweaks to serial_asyncio to get it working on Windows
 class SerialDeviceTransport(SerialTransport):
     if os.name == "nt":
         def _poll_read(self):
@@ -23,7 +24,6 @@ class SerialDeviceTransport(SerialTransport):
                 else:
                     if waiting:
                         self._loop.call_soon(self._read_ready)
-                        return
                 self._loop.call_later(self._poll_wait_time, self._poll_read)
 
         def _poll_write(self):
@@ -35,7 +35,6 @@ class SerialDeviceTransport(SerialTransport):
                 else:
                     if waiting:
                         self._loop.call_soon(self._write_ready)
-                        return
                 self._loop.call_later(self._poll_wait_time, self._poll_write)
 
     def _call_connection_lost(self, exc):
@@ -50,8 +49,8 @@ class SerialDeviceTransport(SerialTransport):
         if os.name == "nt":
             try:
                 self._serial.flush()
-            except serial.SerialException:
-                pass
+            except serial.SerialException as flush_exc:
+                logger.info('unable to flush serial port: {}'.format(flush_exc))
         else:
             try:
                 self._serial.flush()
@@ -77,6 +76,7 @@ class SerialDeviceTransport(SerialTransport):
 @asyncio.coroutine
 def create_serial_connection(loop, protocol_factory, *args, **kwargs):
     ser = serial.serial_for_url(*args, **kwargs)
+    logger.debug('serial port: {}'.format(ser))
     protocol = protocol_factory()
     transport = SerialDeviceTransport(loop, protocol, ser)
     return (transport, protocol)
@@ -239,6 +239,7 @@ class AsyncSerialDevice:
             logger.debug('-> device {}: {}'.format(portinfo.device, b))
             try:
                 writer.write(b)
+                await writer.drain()
             except Exception as e:
                 logger.info('error during write: {}'.format(e))
                 break
@@ -246,9 +247,12 @@ class AsyncSerialDevice:
     async def recv(self, portinfo, reader, parser):
         while True:
             try:
-                b = await reader.readuntil(self.terminator)
+                logger.debug('waiting for read')
+                b = await reader.readline()
                 logger.debug('<- device {}: {}'.format(portinfo.device, b))
-                parser.parse(b)
+                if len(b) > 0:
+                    logger.debug('handing to parser')
+                    parser.parse(b)
             except Exception as e:
                 logger.info('error during read: {}'.format(e))
                 break

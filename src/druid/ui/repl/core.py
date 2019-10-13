@@ -23,7 +23,7 @@ def run(config, script=None):
     loop = asyncio.get_event_loop()
     crow = CrowAsync()
     try:
-        crow.connect()
+        crow.find_device()
     except DeviceNotFoundError as exc:
         print(str(exc))
         sys.exit(1)
