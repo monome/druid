@@ -110,7 +110,7 @@ class CrowAsync(CrowBase):
         # if handlers is not None:
         #     self.handlers.update(handlers)
         try:
-            self.serial = AsyncSerialDevice.find(
+            self.serial = AsyncSerialDevice(
                 self.DEVICE_ID, 
                 handlers=self.handlers,
             )
