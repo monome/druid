@@ -24,6 +24,7 @@ setup(
     include_package_data=True,
     python_requires=">=3.5",
     install_requires=[
+        "Click>=7.0",
         "prompt-toolkit>=2.0.10",
         "pyserial>=3.4",
     ],
@@ -34,7 +35,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "druid=druid.main:main",
+            "druid=druid.cli:cli",
         ],
     },
 )

@@ -74,4 +74,4 @@ Grabs the script currently stored on crow, and pastes the result into a new file
 
 ## Bowery
 
-If you're looking for some existing scripts to play with, or just want some known-good scripts to start modifying, check out the [Bowery](https://github.com/monome/bowery) collection. We'd love to have you contribute your own finished scripts!
+For a collection of `druid` scripts, see the community-contributed collection ['bowery'](https://github.com/monome/bowery). They're a great place to start if you're looking to customize or build your own scripts.
