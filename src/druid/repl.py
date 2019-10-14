@@ -1,3 +1,5 @@
+""" Druid REPL """
+# pylint: disable=C0103
 import asyncio
 import logging.config
 import os
@@ -37,15 +39,18 @@ druid_help = """
 
 """
 
-
 def druidparser(writer, cmd):
+    """
+    Parser for druid commands
+    Translates single letter commands into actions performed against crow
+    """
     parts = cmd.split(maxsplit=1)
     if len(parts) == 0:
         return
     c = parts[0]
     if c == "q":
         raise ValueError("bye.")
-    elif c == "r":
+    if c == "r":
         if len(parts) == 1:
             crowlib.execute(writer, myprint, "./sketch.lua")
         elif len(parts) == 2 and os.path.isfile(parts[1]):
@@ -66,15 +71,18 @@ def druidparser(writer, cmd):
     else:
         writer(bytes(cmd + "\r\n", 'utf-8'))
 
-
 def crowparser(text):
+    """
+    Parser for crow messages
+    Separetes stream/change messages from other messages
+    """
     if "^^" in text:
         cmds = text.split('^^')
         for cmd in cmds:
             t3 = cmd.rstrip().partition('(')
             x = t3[0]
             args = t3[2].rstrip(')').partition(',')
-            if x == "stream" or x == "change":
+            if x in ("stream", "change"):
                 dest = capture1
                 if args[0] == "2":
                     dest = capture2
@@ -84,25 +92,25 @@ def crowparser(text):
     elif len(text) > 0:
         myprint(text+'\n')
 
+capture1 = TextArea(style='class:capture-field', height=2)
+capture2 = TextArea(style='class:capture-field', height=2)
+captures = VSplit([capture1, capture2])
+output_field = TextArea(style='class:output-field', text=druid_intro)
+statusbar = Window(height=1, char='/', style='class:line',
+                   content=FormattedTextControl(text='druid////'),
+                   align=WindowAlign.RIGHT)
+input_field = TextArea(height=1, prompt='> ', multiline=False, wrap_lines=False,
+                       style='class:input-field')
+container = HSplit([
+    captures,
+    output_field,
+    statusbar,
+    input_field])
 
-capture1 = TextArea(style='class:capture-field', height=2
-                    )
-capture2 = TextArea(style='class:capture-field', height=2
-                    )
-output_field = TextArea(style='class:output-field', text=druid_intro
-                        )
-
+crow = None
 
 async def shell():
     global crow
-    input_field = TextArea(height=1, prompt='> ', style='class:input-field', multiline=False,
-                           wrap_lines=False)
-    captures = VSplit([capture1, capture2])
-    container = HSplit([captures, output_field,
-                        Window(height=1, char='/', style='class:line',
-                               content=FormattedTextControl(text='druid////'),
-                               align=WindowAlign.RIGHT),
-                        input_field])
 
     def cwrite(xs):
         global crow
@@ -147,22 +155,18 @@ async def shell():
 
 def _print(field, st):
     s = field.text + st.replace('\r', '')
-    field.buffer.document = Document(text=s, cursor_position=len(s)
-                                     )
-
+    field.buffer.document = Document(text=s, cursor_position=len(s))
 
 def myprint(st):
     _print(output_field, st)
-
 
 def crowreconnect():
     global crow
     try:
         crow = crowlib.connect()
         myprint(" <online!>\n")
-    except ValueError as err:
+    except ValueError:
         myprint(" <lost connection>\n")
-
 
 async def printer():
     global crow
