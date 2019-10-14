@@ -59,7 +59,7 @@ Sometimes you don't need the repl, but just want to upload/download scripts to/f
 ### Upload
 
 ```
-druid upload tensor.lua
+druid upload cool_script.lua
 ```
 
 Uploads the provided lua file, `cool_script.lua`, to crow & stores it in flash to be executed on boot.
