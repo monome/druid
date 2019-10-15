@@ -138,29 +138,6 @@ class CrowAsync(CrowBase):
     async def listen(self, parser):
         await self.serial.listen(parser)
 
-    def writeline(self, s):
-        self.write(s + '\r\n')
-
-    def writefile(self, f):
-        with open(f) as d:
-            lua = d.readlines()
-            for line in lua:
-                self.write(line)
-                time.sleep(0.002)
-
-    def script(self, tty, script_file, cmd):
-        self.write('^^s'),
-        time.sleep(0.2)  # wait for allocation
-        tty.show(' file uploaded: {}'.format(script_file))
-        self.writefile(script_file)
-        time.sleep(0.2)  # wait for upload to complete
-        self.write(cmd)
-
-    def upload(self, tty, script_file):
-        tty.show(' uploading {}\n\r'.format(script_file))
-        self.script(tty, script_file, '^^w')
-
-
 
 class CrowParser:
     def __init__(self, tty, event_handlers):
