@@ -44,27 +44,6 @@ class CrowBase(ABC):
     def writeline(self, s):
         self.write(s + '\r\n')
 
-    @abstractmethod
-    async def listen(self, parser):
-        pass
-
-class Crow(CrowBase):
-
-    def connect(self):
-        try:
-            self.serial = SerialDevice.find(self.DEVICE_ID)
-        except DeviceNotFoundError:
-            raise DeviceNotFoundError("crow device not found")
-
-    def close(self):
-        self.serial.close()
-
-    def read(self, count):
-        return self.serial.read(count)
-
-    def write(self, s):
-        self.serial.write(bytes(s, 'utf-8'))
-
     def writefile(self, f):
         with open(f) as d:
             lua = d.readlines()
@@ -87,6 +66,27 @@ class Crow(CrowBase):
     def execute(self, tty, script_file):
         tty.show(' running {}\n\r'.format(script_file))
         self.script(tty, script_file, '^^e')
+
+    @abstractmethod
+    async def listen(self, parser):
+        pass
+
+class Crow(CrowBase):
+
+    def connect(self):
+        try:
+            self.serial = SerialDevice.find(self.DEVICE_ID)
+        except DeviceNotFoundError:
+            raise DeviceNotFoundError("crow device not found")
+
+    def close(self):
+        self.serial.close()
+
+    def read(self, count):
+        return self.serial.read(count)
+
+    def write(self, s):
+        self.serial.write(bytes(s, 'utf-8'))
 
     def dump(self):
         self.writeline("^^p")
@@ -136,7 +136,6 @@ class CrowAsync(CrowBase):
         self.serial.write(bytes(s, 'utf-8'))
 
     async def listen(self, parser):
-        logger.debug('ran connect, starting listen')
         await self.serial.listen(parser)
 
     def writeline(self, s):
@@ -170,12 +169,10 @@ class CrowParser:
 
 
     def parse(self, s):
-        logger.debug('raw line from device: {}'.format(repr(s)))
         lines = s.decode('ascii').splitlines()
         for line in lines:
             line = line.strip()
             if len(line) > 0:
-                logger.debug('processed line: {}'.format(repr(line)))
                 self.parse_line(line)
 
     def parse_line(self, line):
@@ -201,12 +198,10 @@ class CrowParser:
             except KeyError:
                 break
             else:
-                logger.debug('found handler: {}'.format(curr))
                 if hasattr(curr, '__call__'):
                     logger.debug('found handler: {} {}'.format(evt, curr))
                     return curr(line, evt, args)
                 if isinstance(curr, list):
-                    logger.debug('args: {}'.format(args))
                     try:
                         ch = int(args[0])
                     except ValueError:
@@ -216,3 +211,4 @@ class CrowParser:
                             if hasattr(curr[ch - 1], '__call__'):
                                 logger.debug('found handler: {} {}'.format(evt, curr[ch - 1]))
                                 return curr[ch - 1](line, evt, args)
+        self.tty.show(line)
