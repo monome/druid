@@ -69,9 +69,7 @@ class SerialDeviceTransport(SerialTransport):
 
 
     def _fatal_error(self, exc, message='Fatal error on serial transport'):
-        logger.debug('fatal transport error: {}'.format(exc))
         self._abort(exc)
-        raise
 
 @asyncio.coroutine
 def create_serial_connection(loop, protocol_factory, *args, **kwargs):

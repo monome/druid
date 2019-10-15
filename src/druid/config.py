@@ -41,12 +41,6 @@ logging:
       format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
   handlers:
-    console:
-      class: logging.StreamHandler
-      level: DEBUG
-      formatter: simple
-      stream: ext://sys.stdout
-
     file:
       class: logging.handlers.RotatingFileHandler
       level: DEBUG
@@ -71,8 +65,8 @@ logging:
       handlers: [file, error_file]
 
     root:
-      level: DEBUG
-      propagate: no
+      level: INFO
+      propagate: false
       handlers: [file, error_file]
 '''
 

@@ -42,7 +42,8 @@ def run(config, script=None):
                 loop.run_until_complete(shell.foreground())
             finally:
                 background_task.cancel()
-                loop.run_until_complete(background_task)
+
+        print('bye.')
 
 DRUID_HELP = '''
  h            this menu
@@ -89,7 +90,6 @@ class DruidRepl:
         try:
             self.input_parser.parse(text)
         except ExitDruid:
-            print('bye.')
             get_app().exit()
         except Exception as e:
             logger.error(
