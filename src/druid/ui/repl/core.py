@@ -19,7 +19,7 @@ from druid.ui.tty import TextAreaTTY
 logger = logging.getLogger(__name__)
 
 
-def run(config, script=None):
+def main(config, script=None):
     loop = asyncio.get_event_loop()
     crow = CrowAsync()
     try:

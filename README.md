@@ -50,34 +50,28 @@ druid
 > q
 ```
 
-Execute a lua script and enter the REPL from the command line:
-```
-druid examples/test-2.lua
-```
-
 Diagnostic logs are written to `druid.log`.
 
-## Upload
+## Command Line Interface
+
+Sometimes you don't need the repl, but just want to upload/download scripts to/from crow. You can do so directly from the command line with the `upload` and `download` commands.
+
+### Upload
 
 ```
-python3 upload.py examples/test-2.lua
+druid upload tensor.lua
 ```
 
-Uploads the provided lua file to crow & stores it in flash to be executed on boot.
+Uploads the provided lua file, `cool_script.lua`, to crow & stores it in flash to be executed on boot.
 
-## Download
-
-```
-python3 download.py
-```
-
-Prints to screen.
-Copy to file by running:
+### Download
 
 ```
-python3 download.py > feathers.lua
+druid download > feathers.lua
 ```
+
+Grabs the script currently stored on crow, and pastes the result into a new file `feathers.lua`.
 
 ## Bowery
 
-For a collection of `druid` scripts, see the community-contributed collection ['bowery'](https://github.com/monome/bowery).
+For a collection of `druid` scripts, see the community-contributed collection ['bowery'](https://github.com/monome/bowery). They're a great place to start if you're looking to customize or build your own scripts.

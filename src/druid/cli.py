@@ -76,4 +76,4 @@ def repl(filename):
     os.makedirs('./logs', exist_ok=True)
     logging.config.dictConfig(config['logging'])
 
-    druid_repl.run(config, script=filename)
+    druid_repl.main(config, script=filename)

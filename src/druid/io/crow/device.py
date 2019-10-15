@@ -53,10 +53,10 @@ class CrowBase(ABC):
 
     def script(self, tty, script_file, cmd):
         self.write('^^s'),
-        time.sleep(0.2)  # wait for allocation
+        time.sleep(0.5)  # wait for allocation
         tty.show(' file uploaded: {}'.format(script_file))
         self.writefile(script_file)
-        time.sleep(0.2)  # wait for upload to complete
+        time.sleep(0.5)  # wait for upload to complete
         self.write(cmd)
 
     def upload(self, tty, script_file):

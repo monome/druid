@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from setuptools import setup, find_namespace_packages
 
 # Read the contents of the readme to publish it to PyPI
