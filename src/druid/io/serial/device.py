@@ -67,7 +67,6 @@ class SerialDeviceTransport(SerialTransport):
             self._protocol = None
             self._loop = None
 
-
     def _fatal_error(self, exc, message='Fatal error on serial transport'):
         self._abort(exc)
 
@@ -216,12 +215,13 @@ class AsyncSerialDevice:
                 await asyncio.sleep(1.0)
             else:
                 try:
-                    results = await asyncio.gather(
-                        self.send(portinfo, writer),
-                        self.recv(portinfo, reader, parser),
-                        return_exceptions=True
+                    results = await asyncio.wait(
+                        {
+                            self.send(portinfo, writer),
+                            self.recv(portinfo, reader, parser),
+                        },
+                        return_when=asyncio.FIRST_COMPLETED,
                     )
-                    logger.debug('gather results: {}'.format(results))
                 except Exception as e:
                     logger.debug('errored during send/recv: {}'.format(e))
                 finally:
@@ -233,14 +233,22 @@ class AsyncSerialDevice:
 
     async def send(self, portinfo, writer):
         while True:
-            b = await self._writeq.get()
-            logger.debug('-> device {}: {}'.format(portinfo.device, b))
             try:
-                writer.write(b)
-                await writer.drain()
-            except Exception as e:
-                logger.info('error during write: {}'.format(e))
-                break
+                logger.debug('waiting for write q')
+                b = await asyncio.wait_for(self._writeq.get(), 1.0)
+            except asyncio.TimeoutError:
+                if writer.is_closing():
+                    break
+                else:
+                    continue
+            else:
+                logger.debug('-> device {}: {}'.format(portinfo.device, b))
+                try:
+                    writer.write(b)
+                    await writer.drain()
+                except Exception as e:
+                    logger.info('error during write: {}'.format(e))
+                    break
 
     async def recv(self, portinfo, reader, parser):
         while True:
