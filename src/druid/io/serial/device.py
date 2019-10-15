@@ -9,6 +9,8 @@ import traceback
 
 from druid.io.device import DeviceNotFoundError
 
+if os.name != "nt":
+    import termios
 
 logger = logging.getLogger(__name__)
 
