@@ -1,4 +1,4 @@
-from setuptools import setup, find_namespace_packages
+from setuptools import setup, find_packages
 
 # Read the contents of the readme to publish it to PyPI
 with open("README.md") as readme:
@@ -18,7 +18,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
-    packages=find_namespace_packages("src"),
+    packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,
     python_requires=">=3.5",
