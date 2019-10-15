@@ -141,6 +141,9 @@ class SerialDevice:
             baudrate=baudrate, 
             timeout=timeout,
         )
+
+    def close(self):
+        self.serial.close()
         
     def write(self, b):
         logger.debug('-> device {}: {}'.format(self.port.device, b))

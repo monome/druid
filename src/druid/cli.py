@@ -38,7 +38,7 @@ def download():
         click.echo(err)
         sys.exit(1)
 
-    crow.write("^^p", "utf-8")
+    crow.write("^^p")
     click.echo(crow.read(1000000).decode())
     crow.close()
 
