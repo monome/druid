@@ -35,7 +35,8 @@ def writelines(writer, file):
     with open(file) as d:
         lua = d.readlines()
         for line in lua:
-            writer(line.encode())  # convert text to bytes
+            # add crlf and convert text to bytes
+            writer((line.rstrip() + '\r\n').encode())
             time.sleep(0.002)  # fix os x crash?
 
 def upload(writer, printer, file):
