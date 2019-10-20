@@ -8,11 +8,11 @@ cd <directory where druid is checked out>
 # Create virtual environment
 python3 -m venv .venv
 # Active the virtual environment
-source ./venv/bin/activate
+source .venv/bin/activate
 # Do an editable install of druid
 pip install -e .
 # Activate the virtual environment again to add the druid that's now installed in the virtual environment to $PATH
-source ./venv/bin/activate
+source .venv/bin/activate
 # Now execute druid, which runs directly from the code from this directory
 druid
 ```
