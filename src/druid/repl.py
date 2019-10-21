@@ -108,7 +108,7 @@ container = HSplit([
     input_field])
 
 crow = None
-isConnected = False
+is_connected = False
 
 async def shell():
     global crow
@@ -163,15 +163,15 @@ def myprint(st):
 
 def crowreconnect():
     global crow
-    global isConnected
+    global is_connected
     try:
         crow = crowlib.connect()
         myprint(" <crow connected>\n")
-        isConnected = True
+        is_connected = True
     except ValueError:
-        if isConnected == True:
+        if is_connected == True:
             myprint(" <lost connection>\n")
-            isConnected = False
+            is_connected = False
 
 async def printer():
     global crow
@@ -222,7 +222,7 @@ def main(script=None):
 
     # run script passed from command line
     if script:
-        if isConnected == False:
+        if is_connected == False:
             print("no crow device found. exiting.")
             sys.exit(1)
         crowlib.execute(crow.write, myprint, script)
