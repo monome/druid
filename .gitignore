@@ -54,5 +54,6 @@ dkms.conf
 build/
 dist/
 __pycache__/
+.eggs
 *.log
 *~
