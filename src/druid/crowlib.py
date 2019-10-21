@@ -18,7 +18,7 @@ def connect():
         logger.error("crow not found, exit")
         raise ValueError("can't find crow device")
     try:
-        return serial.Serial(port, 115200, timeout=0.1)
+        return serial.Serial(port, 115200, timeout=0.01)
     except serial.SerialException as e:
         logger.error("could not open comport {}".format(port), e)
         raise ValueError("can't open serial port")
