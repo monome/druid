@@ -179,7 +179,7 @@ async def printer():
                 for line in lines:
                     crowparser(line)
         except:
-            sleeptime = 1.0
+            sleeptime = 0.1
             crowreconnect()
         await asyncio.sleep(sleeptime)
 
