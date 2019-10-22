@@ -48,7 +48,7 @@ def druidparser(writer, cmd):
     if len(parts) == 0:
         return
     c = parts[0]
-    if c == "q":
+    if c == "q" and len(parts) == 1:
         raise ValueError("bye.")
     if c == "r":
         if len(parts) == 1:
@@ -64,9 +64,9 @@ def druidparser(writer, cmd):
             crowlib.upload(writer, myprint, parts[1])
         else:
             writer(bytes(cmd + "\r\n", 'utf-8'))
-    elif c == "p":
+    elif c == "p" and len(parts) == 1:
         writer(bytes("^^p", 'utf-8'))
-    elif c == "h":
+    elif c == "h" and len(parts) == 1:
         myprint(druid_help)
     else:
         writer(bytes(cmd + "\r\n", 'utf-8'))
