@@ -116,6 +116,9 @@ async def shell():
     def cwrite(xs):
         global crow
         try:
+            if len(xs) == 64:
+                # Hack to handle osx/win serial port crash
+                xs = xs + ('\n').encode('ascii')
             crow.write(xs)
         except:
             crowreconnect()
