@@ -6,7 +6,6 @@ with open("README.md") as readme:
 
 setup(
     name="monome-druid",
-    version="0.1.1",
     description="Terminal interface for crow",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -21,11 +20,18 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,
+    use_scm_version=True,
     python_requires=">=3.5",
+    setup_requires=[
+        "setuptools_scm",
+        "setuptools_scm_git_archive",
+    ],
     install_requires=[
         "Click>=7.0",
         "prompt-toolkit>=2.0.10",
         "pyserial>=3.4",
+        "setuptools_scm",
+        "setuptools_scm_git_archive",
     ],
     extras_require={
         "test": [
