@@ -28,6 +28,7 @@ def download():
         sys.exit(1)
 
     crow.write(bytes("^^p", "utf-8"))
+    time.sleep(0.3) # wait for print to complete
     click.echo(crow.read(1000000).decode())
     crow.close()
 
@@ -48,10 +49,10 @@ def upload(filename):
         sys.exit(1)
 
     crowlib.upload(crow.write, myprint, filename)
-    click.echo(crow.read(1000000).decode())
-    click.echo("File uploaded")
-    time.sleep(0.5) # wait for new script to be ready
+    click.echo(crow.read(1000000).decode()) # receive errors
+    time.sleep(0.3) # wait for new script to be ready
     crow.write(bytes("^^p", "utf-8"))
+    time.sleep(0.3) # wait for print to complete
     click.echo(crow.read(1000000).decode())
     crow.close()
 
