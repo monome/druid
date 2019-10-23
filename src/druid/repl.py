@@ -164,7 +164,7 @@ def _print(field, st):
 def myprint(st):
     _print(output_field, st)
 
-def crowreconnect():
+def crowreconnect(errmsg=None):
     global crow
     global is_connected
     try:
@@ -172,6 +172,9 @@ def crowreconnect():
         myprint(" <crow connected>\n")
         is_connected = True
     except ValueError:
+        if errmsg is not None:
+            myprint(" <{}>\n".format(errmsg))
+            return
         if is_connected == True:
             myprint(" <lost connection>\n")
             is_connected = False
@@ -221,7 +224,7 @@ def main(script=None):
         },
     })
 
-    crowreconnect()
+    crowreconnect(errmsg="crow not found")
 
     # run script passed from command line
     if script:
