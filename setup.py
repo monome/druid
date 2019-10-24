@@ -30,6 +30,7 @@ setup(
         "Click>=7.0",
         "prompt-toolkit>=2.0.10",
         "pyserial>=3.4",
+        "setuptools",
         "setuptools_scm",
         "setuptools_scm_git_archive",
     ],
