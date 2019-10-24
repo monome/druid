@@ -174,9 +174,8 @@ def crowreconnect(errmsg=None):
     except ValueError:
         if errmsg is not None:
             myprint(" <{}>\n".format(errmsg))
-            return
-        if is_connected == True:
-            myprint(" <lost connection>\n")
+        elif is_connected == True:
+            myprint(" <crow disconnected>\n")
             is_connected = False
 
 async def printer():
@@ -224,7 +223,7 @@ def main(script=None):
         },
     })
 
-    crowreconnect(errmsg="crow not found")
+    crowreconnect(errmsg="crow disconnected")
 
     # run script passed from command line
     if script:
