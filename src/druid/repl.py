@@ -164,7 +164,7 @@ def _print(field, st):
 def myprint(st):
     _print(output_field, st)
 
-def crowreconnect():
+def crowreconnect(errmsg=None):
     global crow
     global is_connected
     try:
@@ -172,8 +172,10 @@ def crowreconnect():
         myprint(" <crow connected>\n")
         is_connected = True
     except ValueError:
-        if is_connected == True:
-            myprint(" <lost connection>\n")
+        if errmsg is not None:
+            myprint(" <{}>\n".format(errmsg))
+        elif is_connected == True:
+            myprint(" <crow disconnected>\n")
             is_connected = False
 
 async def printer():
@@ -221,7 +223,7 @@ def main(script=None):
         },
     })
 
-    crowreconnect()
+    crowreconnect(errmsg="crow disconnected")
 
     # run script passed from command line
     if script:
