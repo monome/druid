@@ -240,7 +240,7 @@ def main(script=None):
         background_task = asyncio.gather(printer(), return_exceptions=True)
         loop.run_until_complete(shell())
         background_task.cancel()
-        loop.run_until_complete(background_task)
 
-    crow.close()
+    if is_connected:
+        crow.close()
     sys.exit()
