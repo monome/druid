@@ -15,8 +15,6 @@ Note: you might need to use `python` and `pip` instead of `python3` and `pip3` d
 
 Install and run:
 ```bash
-# Ensure setuptools is up to date
-pip3 install --upgrade setuptools
 # Install druid
 pip3 install monome-druid
 # Run druid :)
