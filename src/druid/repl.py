@@ -33,13 +33,16 @@ druid_help = """
  r            runs 'sketch.lua'
  u            uploads 'sketch.lua'
  r <filename> run <filename>
+ a            again - re-runs the last script, with any new changes
  u <filename> upload <filename>
  p            print current userscript
  q            quit
-
 """
 
+last_script = ''
+
 def druidparser(writer, cmd):
+    global last_script
     """
     Parser for druid commands
     Translates single letter commands into actions performed against crow
@@ -54,9 +57,15 @@ def druidparser(writer, cmd):
         if len(parts) == 1:
             crowlib.execute(writer, myprint, "./sketch.lua")
         elif len(parts) == 2 and os.path.isfile(parts[1]):
+            last_script = parts[1]
             crowlib.execute(writer, myprint, parts[1])
         else:
             writer(bytes(cmd + "\r\n", 'utf-8'))
+    elif c == "a" and len(parts) == 1:
+        if len(last_script) == 0:
+            myprint('no scripts have been run yet')
+        else:
+            crowlib.execute(writer, myprint, last_script)
     elif c == "u":
         if len(parts) == 1:
             crowlib.upload(writer, myprint, "./sketch.lua")
