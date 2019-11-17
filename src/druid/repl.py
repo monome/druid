@@ -30,10 +30,9 @@ Char.display_mappings['\t'] = '  '
 druid_intro = "//// druid. q to quit. h for help\n\n"
 druid_help = """
  h            this menu
- r            runs 'sketch.lua'
+ r            run previous script, or 'sketch.lua'
  u            uploads 'sketch.lua'
  r <filename> run <filename>
- a            again - re-runs the last script, with any new changes
  u <filename> upload <filename>
  p            print current userscript
  q            quit
@@ -55,17 +54,15 @@ def druidparser(writer, cmd):
         raise ValueError("bye.")
     if c == "r":
         if len(parts) == 1:
-            crowlib.execute(writer, myprint, "./sketch.lua")
+            if len(last_script) == 0:
+                crowlib.execute(writer, myprint, "./sketch.lua")
+            else:
+                crowlib.execute(writer, myprint, last_script)
         elif len(parts) == 2 and os.path.isfile(parts[1]):
             last_script = parts[1]
             crowlib.execute(writer, myprint, parts[1])
         else:
             writer(bytes(cmd + "\r\n", 'utf-8'))
-    elif c == "a" and len(parts) == 1:
-        if len(last_script) == 0:
-            myprint('no scripts have been run yet')
-        else:
-            crowlib.execute(writer, myprint, last_script)
     elif c == "u":
         if len(parts) == 1:
             crowlib.upload(writer, myprint, "./sketch.lua")
