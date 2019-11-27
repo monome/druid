@@ -28,7 +28,7 @@ setup(
     ],
     install_requires=[
         "Click>=7.0",
-        "prompt-toolkit>=2.0.10",
+        "prompt-toolkit>=2.0.10,<3.0",
         "pyserial>=3.4",
         "setuptools",
         "setuptools_scm",
