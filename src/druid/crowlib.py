@@ -37,6 +37,8 @@ def writelines(writer, file):
         for line in lua:
             writer(line.encode())
             time.sleep(0.001)
+        # in case of missing newline at EOF
+        writer(b'\r\n')
 
 def upload(writer, printer, file):
     printer(" uploading "+file+"\n\r")
