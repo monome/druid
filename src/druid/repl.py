@@ -1,6 +1,8 @@
 """ Druid REPL """
 # pylint: disable=C0103
+from abc import ABC, abstractmethod
 import asyncio
+import logging
 import logging.config
 import os
 import sys
@@ -12,6 +14,8 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import (
+    to_container,
+    Container,
     VSplit, HSplit,
     Window, WindowAlign,
 )
@@ -24,6 +28,8 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 # from druid import crowlib
 from druid.crow import Crow
 
+
+logger = logging.getLogger(__name__)
 
 # monkey patch to fix https://github.com/monome/druid/issues/8
 Char.display_mappings['\t'] = '  '
@@ -40,50 +46,128 @@ druid_help = """
 
 """
 
+class DruidUi:
+    def __init__(self):
+        self.statusbar = Window(
+            height=1,
+            char='/',
+            style='class:line',
+            content=FormattedTextControl(text='druid////'),
+            align=WindowAlign.RIGHT
+        )
 
-class Druid:
-    def __init__(self, crow):
-        self.crow = crow
-        self.set_state('repl')
-        self.output_field = TextArea(style='class:output-field', text=druid_intro)
+        self.container = HSplit([
+            Window(),
+            self.statusbar,
+            Window(height=1),
+        ])
+        self.key_bindings = KeyBindings()
 
-    async def foreground(self, script=None):
-        if script is not None:
-            if self.crow.is_connected == False:
-                print('no crow device found. exiting.')
-                return
-            self.crow.execute(script)
+        @self.key_bindings.add('c-c', eager=True)
+        @self.key_bindings.add('c-q', eager=True)
+        def quit_druid(event):
+            evnt.app.exit()
 
-        self.app = self.fullscreen()
-        return await self.app.run_async()
+        self.style = Style([
+            ('capture-field', '#747369'),
+            ('output-field', '#d3d0c8'),
+            ('input-field', '#f2f0ec'),
+            ('line', '#747369'),
+        ])
+        self.layout = Layout(self.container)
 
-    async def background(self):
-        await self.crow.read_forever()
+        self.app = Application(
+            layout=self.layout,
+            key_bindings=self.key_bindings,
+            style=self.style,
+            mouse_support=True,
+            full_screen=True,
+        )
 
-    def set_state(self, state):
-        if state == 'repl':
-            on_disconnect = lambda exc: self.output(' <crow disconnected>\n')
-            self.crow.replace_handlers({
-                'connect': [lambda: self.output(' <crow connected>\n')],
-                'connect_err': [on_disconnect],
-                'disconnect': [on_disconnect],
+        self.pages = dict()
+        self.current_page = None
 
-                'running': [lambda fname: self.output(f'running {fname}\n')],
-                'uploading': [lambda fname: self.output(f'uploading {fname}\n')],
-
-                'crow_event': [],
-                'crow_output': [lambda output: self.output(output + '\n')],
-            })
+    def set_page(self, name):
+        if self.current_page is not None:
+            self.current_page.unmount()
+        try:
+            self.current_page = self.pages[name]
+        except KeyError:
+            pass
         else:
-            return
-        self.state = state
+            self.current_page.mount()
 
-    def output(self, st):
-        self.output_to_field(self.output_field, st)
+    def add_page(self, key, page):
+        self.pages[key] = page
+
+class UiPage(ABC):
+    def __init__(self, ui):
+        self.ui = ui
+        self.build_ui()
+
+    @abstractmethod
+    def build_ui(self):
+        pass
+
+    @abstractmethod
+    def arrange_ui(self, container):
+        pass
 
     def output_to_field(self, field, st):
         s = field.text + st.replace('\r', '')
         field.buffer.document = Document(text=s, cursor_position=len(s))
+
+    def mount(self):
+        self.arrange_ui(self.ui.container)
+
+    def unmount(self):
+        pass
+
+
+class DruidRepl(UiPage):
+    def __init__(self, ui, crow):
+        self.crow = crow
+        super().__init__(ui)
+
+        on_disconnect = lambda exc: self.output(' <crow disconnected>\n')
+        self.handlers = {
+            'connect': [lambda: self.output(' <crow connected>\n')],
+            'connect_err': [on_disconnect],
+            'disconnect': [on_disconnect],
+
+            'running': [lambda fname: self.output(f'running {fname}\n')],
+            'uploading': [lambda fname: self.output(f'uploading {fname}\n')],
+
+            'crow_event': [],
+            'crow_output': [lambda output: self.output(output + '\n')],
+        }
+
+    def build_ui(self):
+        self.output_field = TextArea(style='class:output-field', text=druid_intro)
+        self.input_field = TextArea(
+            height=1,
+            prompt='> ',
+            multiline=False,
+            wrap_lines=False,
+            style='class:input-field'
+        )
+        self.input_field.accept_handler = self.accept
+
+    def arrange_ui(self, container):
+        container.children.clear()
+        container.children.extend([
+            to_container(self.output_field),
+            self.ui.statusbar,
+            to_container(self.input_field),
+        ])
+
+    def mount(self):
+        self.crow.replace_handlers(self.handlers)
+        super().mount()
+        self.ui.layout.focus(self.input_field)
+
+    def output(self, st):
+        self.output_to_field(self.output_field, st)
 
     def accept(self, buff):
         self.output(f'\n> {self.input_field.text}\n')
@@ -105,7 +189,7 @@ class Druid:
         elif len(parts) == 1:
             if c == 'q':
                 print('bye.')
-                self.app.exit()
+                get_app().exit()
             elif c == 'p':
                 self.crow.write('^^p')
             elif c == 'h':
@@ -115,49 +199,26 @@ class Druid:
         else:
             self.crow.writeline(cmd)
 
-    def fullscreen(self):
-        self.statusbar = Window(
-            height=1,
-            char='/',
-            style='class:line',
-            content=FormattedTextControl(text='druid////'),
-            align=WindowAlign.RIGHT
-        )
-        self.input_field = TextArea(
-            height=1,
-            prompt='> ',
-            multiline=False,
-            wrap_lines=False,
-            style='class:input-field'
-        )
-        self.input_field.accept_handler = self.accept
-        self.container = HSplit([
-            self.output_field,
-            self.statusbar,
-            self.input_field
-        ])
-        kb = KeyBindings()
 
-        @kb.add('c-c', eager=True)
-        @kb.add('c-q', eager=True)
-        def _(event):
-            event.app.exit()
+class Druid:
+    def __init__(self, crow):
+        self.crow = crow
+        self.ui = DruidUi()
 
-        style = Style([
-            ('capture-field', '#747369'),
-            ('output-field', '#d3d0c8'),
-            ('input-field', '#f2f0ec'),
-            ('line', '#747369'),
-        ])
+        self.ui.add_page('repl', DruidRepl(ui=self.ui, crow=crow))
+        self.ui.set_page('repl')
 
-        return Application(
-            layout=Layout(self.container, focused_element=self.input_field),
-            key_bindings=kb,
-            style=style,
-            mouse_support=True,
-            full_screen=True,
-        )
+    async def foreground(self, script=None):
+        if script is not None:
+            if self.crow.is_connected == False:
+                print('no crow device found. exiting.')
+                return
+            self.crow.execute(script)
 
+        return await self.ui.app.run_async()
+
+    async def background(self):
+        await self.crow.read_forever()
 
 def main(script=None):
     logging.config.dictConfig({
@@ -178,6 +239,9 @@ def main(script=None):
             },
         },
         'loggers': {
+            'druid.repl': {
+                'handlers': ['file'],
+            },
             'druid.crow': {
                 'handlers': ['file'],
             },
