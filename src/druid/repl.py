@@ -21,7 +21,8 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.layout.controls import FormattedTextControl
 
-from druid import crowlib
+# from druid import crowlib
+from druid.crow import Crow
 
 
 # monkey patch to fix https://github.com/monome/druid/issues/8
@@ -39,159 +40,123 @@ druid_help = """
 
 """
 
-def druidparser(writer, cmd):
-    """
-    Parser for druid commands
-    Translates single letter commands into actions performed against crow
-    """
-    parts = cmd.split(maxsplit=1)
-    if len(parts) == 0:
-        return
-    c = parts[0]
-    if c == "q" and len(parts) == 1:
-        raise ValueError("bye.")
-    if c == "r":
-        if len(parts) == 1:
-            crowlib.execute(writer, myprint, "./sketch.lua")
-        elif len(parts) == 2 and os.path.isfile(parts[1]):
-            crowlib.execute(writer, myprint, parts[1])
+
+class Druid:
+    def __init__(self, crow):
+        self.crow = crow
+        self.set_state('repl')
+        self.output_field = TextArea(style='class:output-field', text=druid_intro)
+
+    async def foreground(self, script=None):
+        if script is not None:
+            if self.crow.is_connected == False:
+                print('no crow device found. exiting.')
+                return
+            self.crow.execute(script)
+
+        self.app = self.fullscreen()
+        return await self.app.run_async()
+
+    async def background(self):
+        await self.crow.read_forever()
+
+    def set_state(self, state):
+        if state == 'repl':
+            on_disconnect = lambda exc: self.output(' <crow disconnected>\n')
+            self.crow.replace_handlers({
+                'connect': [lambda: self.output(' <crow connected>\n')],
+                'connect_err': [on_disconnect],
+                'disconnect': [on_disconnect],
+
+                'running': [lambda fname: self.output(f'running {fname}\n')],
+                'uploading': [lambda fname: self.output(f'uploading {fname}\n')],
+
+                'crow_event': [],
+                'crow_output': [lambda output: self.output(output + '\n')],
+            })
         else:
-            writer(bytes(cmd + "\r\n", 'utf-8'))
-    elif c == "u":
-        if len(parts) == 1:
-            crowlib.upload(writer, myprint, "./sketch.lua")
-        elif len(parts) == 2 and os.path.isfile(parts[1]):
-            crowlib.upload(writer, myprint, parts[1])
+            return
+        self.state = state
+
+    def output(self, st):
+        self.output_to_field(self.output_field, st)
+
+    def output_to_field(self, field, st):
+        s = field.text + st.replace('\r', '')
+        field.buffer.document = Document(text=s, cursor_position=len(s))
+
+    def accept(self, buff):
+        self.output(f'\n> {self.input_field.text}\n')
+        self.parse(self.input_field.text)
+
+    def parse(self, cmd):
+        parts = cmd.split(maxsplit=1)
+        if len(parts) == 0:
+            return
+        c = parts[0]
+        if c == 'r' or c == 'u':
+            run_func = self.crow.upload if c == 'u' else self.crow.execute
+            if len(parts) == 1:
+                run_func('./sketch.lua')
+            elif len(parts) == 2 and os.path.isfile(parts[1]):
+                run_func(parts[1])
+            else:
+                self.crow.writeline(cmd)
+        elif len(parts) == 1:
+            if c == 'q':
+                print('bye.')
+                self.app.exit()
+            elif c == 'p':
+                self.crow.write('^^p')
+            elif c == 'h':
+                self.output(druid_help)
+            else:
+                self.crow.writeline(cmd)
         else:
-            writer(bytes(cmd + "\r\n", 'utf-8'))
-    elif c == "p" and len(parts) == 1:
-        writer(bytes("^^p", 'utf-8'))
-    elif c == "h" and len(parts) == 1:
-        myprint(druid_help)
-    else:
-        writer(bytes(cmd + "\r\n", 'utf-8'))
+            self.crow.writeline(cmd)
 
-def crowparser(text):
-    """
-    Parser for crow messages
-    Separetes stream/change messages from other messages
-    """
-    if "^^" in text:
-        cmds = text.split('^^')
-        for cmd in cmds:
-            t3 = cmd.rstrip().partition('(')
-            x = t3[0]
-            args = t3[2].rstrip(')').partition(',')
-            if x in ("stream", "change"):
-                dest = capture1
-                if args[0] == "2":
-                    dest = capture2
-                _print(dest, ('\ninput['+args[0]+'] = '+args[2]+'\n'))
-            elif len(cmd) > 0:
-                myprint('^^'+cmd+'\n')
-    elif len(text) > 0:
-        myprint(text+'\n')
+    def fullscreen(self):
+        self.statusbar = Window(
+            height=1,
+            char='/',
+            style='class:line',
+            content=FormattedTextControl(text='druid////'),
+            align=WindowAlign.RIGHT
+        )
+        self.input_field = TextArea(
+            height=1,
+            prompt='> ',
+            multiline=False,
+            wrap_lines=False,
+            style='class:input-field'
+        )
+        self.input_field.accept_handler = self.accept
+        self.container = HSplit([
+            self.output_field,
+            self.statusbar,
+            self.input_field
+        ])
+        kb = KeyBindings()
 
-capture1 = TextArea(style='class:capture-field', height=2)
-capture2 = TextArea(style='class:capture-field', height=2)
-captures = VSplit([capture1, capture2])
-output_field = TextArea(style='class:output-field', text=druid_intro)
-statusbar = Window(height=1, char='/', style='class:line',
-                   content=FormattedTextControl(text='druid////'),
-                   align=WindowAlign.RIGHT)
-input_field = TextArea(height=1, prompt='> ', multiline=False, wrap_lines=False,
-                       style='class:input-field')
-container = HSplit([
-    captures,
-    output_field,
-    statusbar,
-    input_field])
+        @kb.add('c-c', eager=True)
+        @kb.add('c-q', eager=True)
+        def _(event):
+            event.app.exit()
 
-crow = None
-is_connected = False
+        style = Style([
+            ('capture-field', '#747369'),
+            ('output-field', '#d3d0c8'),
+            ('input-field', '#f2f0ec'),
+            ('line', '#747369'),
+        ])
 
-async def shell():
-    global crow
-
-    def cwrite(xs):
-        global crow
-        try:
-            if len(xs)%64 == 0:
-                # Hack to handle osx/win serial port crash
-                xs = xs + ('\n').encode('ascii')
-            crow.write(xs)
-        except:
-            crowreconnect()
-
-    def accept(buff):
-        try:
-            myprint('\n> '+input_field.text+'\n')
-            druidparser(cwrite, input_field.text)
-        except ValueError as err:
-            print(err)
-            get_app().exit()
-
-    input_field.accept_handler = accept
-
-    kb = KeyBindings()
-
-    @kb.add('c-c', eager=True)
-    @kb.add('c-q', eager=True)
-    def _(event):
-        event.app.exit()
-
-    style = Style([
-        ('capture-field', '#747369'),
-        ('output-field', '#d3d0c8'),
-        ('input-field', '#f2f0ec'),
-        ('line', '#747369'),
-    ])
-
-    application = Application(
-        layout=Layout(container, focused_element=input_field),
-        key_bindings=kb,
-        style=style,
-        mouse_support=True,
-        full_screen=True,
-    )
-    result = await application.run_async()
-
-
-def _print(field, st):
-    s = field.text + st.replace('\r', '')
-    field.buffer.document = Document(text=s, cursor_position=len(s))
-
-def myprint(st):
-    _print(output_field, st)
-
-def crowreconnect(errmsg=None):
-    global crow
-    global is_connected
-    try:
-        crow = crowlib.connect()
-        myprint(" <crow connected>\n")
-        is_connected = True
-    except ValueError:
-        if errmsg is not None:
-            myprint(" <{}>\n".format(errmsg))
-        elif is_connected == True:
-            myprint(" <crow disconnected>\n")
-            is_connected = False
-
-async def printer():
-    global crow
-    while True:
-        sleeptime = 0.001
-        try:
-            r = crow.read(10000)
-            if len(r) > 0:
-                lines = r.decode('ascii').split('\n\r')
-                for line in lines:
-                    crowparser(line)
-        except:
-            sleeptime = 0.1
-            crowreconnect()
-        await asyncio.sleep(sleeptime)
+        return Application(
+            layout=Layout(self.container, focused_element=self.input_field),
+            key_bindings=kb,
+            style=style,
+            mouse_support=True,
+            full_screen=True,
+        )
 
 
 def main(script=None):
@@ -213,7 +178,7 @@ def main(script=None):
             },
         },
         'loggers': {
-            'crowlib': {
+            'druid.crow': {
                 'handlers': ['file'],
             },
         },
@@ -223,24 +188,15 @@ def main(script=None):
         },
     })
 
-    crowreconnect(errmsg="crow disconnected")
-
-    # run script passed from command line
-    if script:
-        if is_connected == False:
-            print("no crow device found. exiting.")
-            sys.exit(1)
-        crowlib.execute(crow.write, myprint, script)
-
     loop = asyncio.get_event_loop()
-
     use_asyncio_event_loop()
-
     with patch_stdout():
-        background_task = asyncio.gather(printer(), return_exceptions=True)
-        loop.run_until_complete(shell())
-        background_task.cancel()
-
-    if is_connected:
-        crow.close()
-    sys.exit()
+        with Crow() as crow:
+            shell = Druid(crow)
+            crow.reconnect(errmsg='crow disconnected')
+            background_task = asyncio.gather(
+                shell.background(),
+                return_exceptions=True,
+            )
+            loop.run_until_complete(shell.foreground())
+            background_task.cancel()
