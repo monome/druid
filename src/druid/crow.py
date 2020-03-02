@@ -69,7 +69,7 @@ class Crow:
             self.raise_event('connect')
         except Exception as exc:
             logger.debug(f'error in reconnect: {exc}')
-            if self.is_connected:
+            if self.is_connected or errmsg is not None:
                 self.is_connected = False
                 self.raise_event('connect_err', exc)
 
