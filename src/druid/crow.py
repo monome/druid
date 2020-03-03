@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 def find_serial_port(hwid):
     for portinfo in serial.tools.list_ports.comports():
-        logger.info(f'{portinfo.device} - {portinfo.hwid}')
         if hwid in portinfo.hwid:
             return portinfo
     raise DeviceNotFoundError(f"can't find device {hwid}")
@@ -23,8 +22,7 @@ class Crow:
         self.is_connected = False
         self.event_handlers = {}
 
-    @classmethod
-    def find_device(cls):
+    def find_device(self):
         portinfo = find_serial_port('USB VID:PID=0483:5740')
         try:
             return serial.Serial(
@@ -43,7 +41,8 @@ class Crow:
             self.disconnect()
 
     def connect(self):
-        self.serial = Crow.find_device()
+        self.serial = self.find_device()
+        logger.info(f'connected to crow on {self.serial.port}')
 
     def disconnect(self):
         if self.serial is not None:
@@ -61,15 +60,13 @@ class Crow:
     def replace_handlers(self, handlers):
         self.event_handlers = handlers
     
-    def reconnect(self, errmsg=None):
-        logger.debug('reconnecting')
+    def reconnect(self, err_event=False):
         try:
             self.connect()
             self.is_connected = True
             self.raise_event('connect')
         except Exception as exc:
-            logger.debug(f'error in reconnect: {exc}')
-            if self.is_connected or errmsg is not None:
+            if self.is_connected or err_event:
                 self.is_connected = False
                 self.raise_event('connect_err', exc)
 
@@ -125,7 +122,8 @@ class Crow:
                     for line in lines:
                         self.process_line(line)
             except Exception as exc:
-                logger.debug(f'error during read: {exc}')
+                if self.is_connected:
+                    logger.error(f'lost connection: {exc}')
                 sleeptime = 0.1
                 self.reconnect()
             await asyncio.sleep(sleeptime)

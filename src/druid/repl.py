@@ -253,44 +253,50 @@ class Druid:
     async def background(self):
         await self.crow.read_forever()
 
+
+log_config = {
+    'version': 1,
+    'formatters': {
+        'detailed': {
+            'class': 'logging.Formatter',
+            'format': '%(asctime)s %(name)-15s %(levelname)-8s'
+            '%(processName)-10s %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'druid.log',
+            'mode': 'w',
+            'formatter': 'detailed',
+        },
+    },
+    'loggers': {
+        'druid.repl': {
+            'handlers': ['file'],
+        },
+        'druid.crow': {
+            'handlers': ['file'],
+        },
+    },
+    'root': {
+        'level': 'INFO',
+        'handlers': [],
+    },
+}
+
 def main(script=None):
-    logging.config.dictConfig({
-        'version': 1,
-        'formatters': {
-            'detailed': {
-                'class': 'logging.Formatter',
-                'format': '%(asctime)s %(name)-15s %(levelname)-8s'
-                          '%(processName)-10s %(message)s'
-            },
-        },
-        'handlers': {
-            'file': {
-                'class': 'logging.FileHandler',
-                'filename': 'druid.log',
-                'mode': 'w',
-                'formatter': 'detailed',
-            },
-        },
-        'loggers': {
-            'druid.repl': {
-                'handlers': ['file'],
-            },
-            'druid.crow': {
-                'handlers': ['file'],
-            },
-        },
-        'root': {
-            'level': 'DEBUG',
-            'handlers': [],
-        },
-    })
+    try:
+        logging.config.dictConfig(log_config)
+    except ValueError:
+        print('could not configure file logging (insufficient permissions?)')
 
     loop = asyncio.get_event_loop()
     use_asyncio_event_loop()
     with patch_stdout():
         with Crow() as crow:
             shell = Druid(crow)
-            crow.reconnect(errmsg='crow disconnected')
+            crow.reconnect(err_event=True)
             background_task = asyncio.gather(
                 shell.background(),
                 return_exceptions=True,
