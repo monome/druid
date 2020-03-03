@@ -7,6 +7,7 @@ import logging.config
 import os
 import sys
 
+from prompt_toolkit.completion import Completer, PathCompleter
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.application import Application
@@ -15,7 +16,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import (
     to_container,
-    Container,
+    Container, FloatContainer, Float,
     VSplit, HSplit,
     Window, WindowAlign,
 )
@@ -24,8 +25,8 @@ from prompt_toolkit.layout.screen import Char
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.menus import CompletionsMenu
 
-# from druid import crowlib
 from druid.crow import Crow
 
 
@@ -56,17 +57,27 @@ class DruidUi:
             align=WindowAlign.RIGHT
         )
 
-        self.container = HSplit([
+        self.content = HSplit([
             Window(),
             self.statusbar,
             Window(height=1),
         ])
+        self.container = FloatContainer(
+            content=self.content,
+            floats=[
+                Float(
+                    xcursor=True,
+                    ycursor=True,
+                    content=CompletionsMenu(max_height=16, scroll_offset=1),
+                ),
+            ],
+        )
         self.key_bindings = KeyBindings()
 
         @self.key_bindings.add('c-c', eager=True)
         @self.key_bindings.add('c-q', eager=True)
         def quit_druid(event):
-            evnt.app.exit()
+            event.app.exit()
 
         self.style = Style([
             ('capture-field', '#747369'),
@@ -118,15 +129,35 @@ class UiPage(ABC):
         field.buffer.document = Document(text=s, cursor_position=len(s))
 
     def mount(self):
-        self.arrange_ui(self.ui.container)
+        self.arrange_ui(self.ui.content)
 
     def unmount(self):
         pass
 
 
+class ReplCompleter(Completer):
+    def __init__(self):
+        self.path_completer = PathCompleter()
+
+    def get_completions(self, document, complete_event):
+        line = document.current_line.lstrip()
+
+        fname = None
+        before_len = len(document.text_before_cursor) - len(line)
+        if line.startswith('r ') or line.startswith('u '):
+            remaining_text = line[2:].lstrip()
+            move_cursor = len(line) - len(remaining_text) + before_len
+            new_document = Document(
+                remaining_text,
+                cursor_position=document.cursor_position - move_cursor
+            )
+            yield from self.path_completer.get_completions(new_document, complete_event)
+
+
 class DruidRepl(UiPage):
     def __init__(self, ui, crow):
         self.crow = crow
+        self.completer = ReplCompleter()
         super().__init__(ui)
 
         on_disconnect = lambda exc: self.output(' <crow disconnected>\n')
@@ -149,7 +180,9 @@ class DruidRepl(UiPage):
             prompt='> ',
             multiline=False,
             wrap_lines=False,
-            style='class:input-field'
+            style='class:input-field',
+            completer=self.completer,
+            complete_while_typing=True,
         )
         self.input_field.accept_handler = self.accept
 
