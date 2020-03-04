@@ -7,7 +7,7 @@ import logging.config
 import os
 import sys
 
-from prompt_toolkit.completion import Completer, PathCompleter
+from prompt_toolkit.completion import Completer, PathCompleter, WordCompleter
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.application import Application
@@ -136,21 +136,54 @@ class UiPage(ABC):
 
 
 class ReplCompleter(Completer):
+    CROW_COMMANDS = {
+        "bootloader": "Reboot into bootloader",
+        "clear": "Clear the saved user script",
+        "first": "Set First as the current script and reboot",
+        "help": "Show help",
+        "identity": "Show crow's serial number",
+        "kill": "Restart the Lua environment",
+        "print": "Print the current user script",
+        "quit": "Quit druid",
+        "reset": "Reboot crow",
+        "run": "Send a file to crow and run it",
+        "upload": "Send a file to crow, store and run it",
+        "version": "Print the current firmware version"
+    }
+
     def __init__(self):
-        self.path_completer = PathCompleter()
+        self.path_completer = PathCompleter(
+            file_filter=lambda s: os.path.isdir(s) or s.endswith('.lua')
+        )
+
+        self.word_completer = WordCompleter(
+            words=self.CROW_COMMANDS.keys(),
+            ignore_case=True,
+            meta_dict=self.CROW_COMMANDS,
+        )
+
+    def offset_document(self, document, offset):
+        move_cursor = len(document.current_line) - offset
+        return Document(
+            document.current_line[offset:],
+            cursor_position=document.cursor_position - offset
+        )
 
     def get_completions(self, document, complete_event):
         line = document.current_line.lstrip()
+        offset = len(document.current_line) - len(line)
 
-        fname = None
-        before_len = len(document.text_before_cursor) - len(line)
-        if line.startswith('r ') or line.startswith('u '):
-            remaining_text = line[2:].lstrip()
-            move_cursor = len(line) - len(remaining_text) + before_len
-            new_document = Document(
-                remaining_text,
-                cursor_position=document.cursor_position - move_cursor
-            )
+        if line.startswith('^^'):
+            line = line[2:]
+            offset += 2
+            new_document = self.offset_document(document, offset)
+            yield from self.word_completer.get_completions(new_document, complete_event)
+        elif line.startswith('r ') or line.startswith('u '):
+            line = line[2:]
+            offset += 2
+            rem = line.lstrip()
+            offset += len(line) - len(rem)
+            new_document = self.offset_document(document, offset)
             yield from self.path_completer.get_completions(new_document, complete_event)
 
 
@@ -169,11 +202,15 @@ class DruidRepl(UiPage):
             'running': [lambda fname: self.output(f'running {fname}\n')],
             'uploading': [lambda fname: self.output(f'uploading {fname}\n')],
 
-            'crow_event': [],
+            'crow_event': [self.crow_event],
             'crow_output': [lambda output: self.output(output + '\n')],
         }
 
     def build_ui(self):
+        self.captures = [
+            TextArea(style='class:capture-field', height=2),
+            TextArea(style='class:capture-field', height=2),
+        ]
         self.output_field = TextArea(style='class:output-field', text=druid_intro)
         self.input_field = TextArea(
             height=1,
@@ -189,6 +226,7 @@ class DruidRepl(UiPage):
     def arrange_ui(self, container):
         container.children.clear()
         container.children.extend([
+            VSplit(self.captures),
             to_container(self.output_field),
             self.ui.statusbar,
             to_container(self.input_field),
@@ -231,6 +269,15 @@ class DruidRepl(UiPage):
                 self.crow.writeline(cmd)
         else:
             self.crow.writeline(cmd)
+            
+    def crow_event(self, line, event, args):
+        if event == 'stream' or event == 'change':
+            ch_str, val = args
+            ch = int(ch_str)
+            if ch >= 1 and ch <= 2:
+                self.output_to_field(self.captures[ch - 1], f'\ninput[{ch}] = {val}\n')
+        else:
+            self.output(f'^^{event}({", ".join(args)})')
 
 
 class Druid:

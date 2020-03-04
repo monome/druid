@@ -55,7 +55,10 @@ class Crow:
             pass
         else:
             for handler in handlers:
-                handler(*args, **kwargs)
+                try:
+                    handler(*args, **kwargs)
+                except Exception as exc:
+                    logger.error(f'error in command handler "{event}" ({handler}): {exc}')
 
     def replace_handlers(self, handlers):
         self.event_handlers = handlers
