@@ -21,7 +21,7 @@ setup(
     package_dir={"": "src"},
     include_package_data=True,
     use_scm_version=True,
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     setup_requires=[
         "setuptools_scm",
         "setuptools_scm_git_archive",
