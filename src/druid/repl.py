@@ -13,6 +13,7 @@ from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.document import Document
+from prompt_toolkit.filters import to_filter
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import (
     to_container,
@@ -84,6 +85,8 @@ class DruidUi:
             ('output-field', '#d3d0c8'),
             ('input-field', '#f2f0ec'),
             ('line', '#747369'),
+            ('scrollbar.background', 'bg:#000000'),
+            ('scrollbar.button', 'bg:#747369'),
         ])
         self.layout = Layout(self.container)
 
@@ -211,7 +214,12 @@ class DruidRepl(UiPage):
             TextArea(style='class:capture-field', height=2),
             TextArea(style='class:capture-field', height=2),
         ]
-        self.output_field = TextArea(style='class:output-field', text=druid_intro)
+        self.output_field = TextArea(
+            style='class:output-field',
+            text=druid_intro,
+            scrollbar=True,
+        )
+        self.output_field.window.right_margins[0].display_arrows = to_filter(False)
         self.input_field = TextArea(
             height=1,
             prompt='> ',
@@ -235,10 +243,17 @@ class DruidRepl(UiPage):
     def mount(self):
         self.crow.replace_handlers(self.handlers)
         super().mount()
+        pgup = lambda evt: self.pageup(evt, self.output_field)
+        pgdn = lambda evt: self.pagedown(evt, self.output_field)
+        self.ui.key_bindings.add('pageup')(pgup)
+        self.ui.key_bindings.add('escape', 'v')(pgup)
+        self.ui.key_bindings.add('pagedown')(pgdn)
+        self.ui.key_bindings.add('c-v')(pgdn)
         self.ui.layout.focus(self.input_field)
 
     def output(self, st):
-        self.output_to_field(self.output_field, st)
+        self.output_field.buffer.cursor_position = len(self.output_field.buffer.text)
+        self.output_field.buffer.insert_text(st.replace('\r', ''))
 
     def accept(self, buff):
         self.output(f'\n> {self.input_field.text}\n')
@@ -278,6 +293,41 @@ class DruidRepl(UiPage):
                 self.output_to_field(self.captures[ch - 1], f'\ninput[{ch}] = {val}\n')
         else:
             self.output(f'^^{event}({", ".join(args)})')
+
+    # these come from:
+    # https://github.com/prompt-toolkit/python-prompt-toolkit/blob/5c3d13eb849885bc4c1a2553ea6f81e6272f84c9/prompt_toolkit/key_binding/bindings/scroll.py#L147
+    def pageup(self, event, field):
+        w = field.window
+        b = field.buffer
+        if w and w.render_info:
+            # Put cursor at the first visible line. (But make sure that the cursor
+            # moves at least one line up.)
+            line_index = max(
+                0,
+                min(w.render_info.first_visible_line(), b.document.cursor_position_row - 1),
+            )
+
+            b.cursor_position = b.document.translate_row_col_to_index(line_index, 0)
+            b.cursor_position += b.document.get_start_of_line_position(
+                after_whitespace=True
+            )
+
+            # Set the scroll offset. We can safely set it to zero; the Window will
+            # make sure that it scrolls at least until the cursor becomes visible.
+            w.vertical_scroll = 0
+
+    def pagedown(self, event, field):
+        w = field.window
+        b = field.buffer
+        if w and w.render_info:
+            # Scroll down one page.
+            line_index = max(w.render_info.last_visible_line(), w.vertical_scroll + 1)
+            w.vertical_scroll = line_index
+
+            b.cursor_position = b.document.translate_row_col_to_index(line_index, 0)
+            b.cursor_position += b.document.get_start_of_line_position(
+                after_whitespace=True
+            )
 
 
 class Druid:
