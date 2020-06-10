@@ -22,6 +22,6 @@ Closing the terminal will also exit the virtual environment. Running `deactivate
 If at a later point you want to start working on druid again it's enough to activate the virtual environment again using
 ```
 cd <directory where druid is checked out>
-source ./venv/bin/activate
+source .venv/bin/activate
 druid
 ```
