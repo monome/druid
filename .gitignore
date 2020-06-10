@@ -54,6 +54,8 @@ dkms.conf
 build/
 dist/
 __pycache__/
+.venv/
+src/monome_druid.egg-info/
 .eggs
 *.log
 *~

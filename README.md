@@ -5,13 +5,13 @@ A basic REPL for crow with some utilities
 ## Setup
 
 Requirements:
-- Python 3.5+
+- Python 3.6+
   - Windows & OS X: https://www.python.org/downloads/
   - Linux: `sudo apt-get install python3 python3-pip` or equivalent
 - `pip` and `setuptools`
 - `pyserial` and `prompt_toolkit`
 
-Note: you might need to use `python` and `pip` instead of `python3` and `pip3` depending on your platform. If `python3` is not found, check that you have python >= 3.5 with `python --version`.
+Note: you might need to use `python` and `pip` instead of `python3` and `pip3` depending on your platform. If `python3` is not found, check that you have python >= 3.6 with `python --version`.
 
 Install and run:
 ```bash

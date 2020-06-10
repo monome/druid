@@ -5,7 +5,8 @@ import time
 
 import click
 
-from druid import __version__, crowlib
+from druid import __version__
+from druid.crow import Crow
 from druid import repl as druid_repl
 
 @click.group(invoke_without_command=True)
@@ -21,19 +22,11 @@ def download():
     """
     Download a file from crow and print it to stdout
     """
-    try:
-        crow = crowlib.connect()
-    except ValueError as err:
-        click.echo(err)
-        sys.exit(1)
-
-    crow.write(bytes("^^p", "utf-8"))
-    time.sleep(0.3) # wait for print to complete
-    click.echo(crow.read(1000000).decode())
-    crow.close()
-
-def myprint(string):
-    click.echo(string)
+    with Crow() as crow:
+        crow.connect()
+        crow.write('^^p')
+        time.sleep(0.3)
+        click.echo(crow.read(1000000))
 
 @cli.command(short_help="Upload a file to crow")
 @click.argument("filename", type=click.Path(exists=True))
@@ -42,19 +35,14 @@ def upload(filename):
     Upload a file to crow.
     FILENAME is the path to the Lua file to upload
     """
-    try:
-        crow = crowlib.connect()
-    except ValueError as err:
-        click.echo(err)
-        sys.exit(1)
-
-    crowlib.upload(crow.write, myprint, filename)
-    click.echo(crow.read(1000000).decode()) # receive errors
-    time.sleep(0.3) # wait for new script to be ready
-    crow.write(bytes("^^p", "utf-8"))
-    time.sleep(0.3) # wait for print to complete
-    click.echo(crow.read(1000000).decode())
-    crow.close()
+    with Crow() as crow:
+        crow.connect()
+        crow.upload(filename)
+        click.echo(crow.read(1000000))
+        time.sleep(0.3)
+        crow.write('^^p')
+        time.sleep(0.3)
+        click.echo(crow.read(1000000))
 
 @cli.command()
 @click.argument("filename", type=click.Path(exists=True), required=False)
