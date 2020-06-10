@@ -39,14 +39,15 @@ Char.display_mappings['\t'] = '  '
 druid_intro = "//// druid. q to quit. h for help\n\n"
 druid_help = """
  h            this menu
- r            runs 'sketch.lua'
+ r            runs previous script that was run with r <filename>
  u            uploads 'sketch.lua'
  r <filename> run <filename>
  u <filename> upload <filename>
  p            print current userscript
  q            quit
-
 """
+
+last_script = ''
 
 class DruidUi:
     def __init__(self):
@@ -266,9 +267,14 @@ class DruidRepl(UiPage):
         c = parts[0]
         if c == 'r' or c == 'u':
             run_func = self.crow.upload if c == 'u' else self.crow.execute
+            global last_script
             if len(parts) == 1:
-                run_func('./sketch.lua')
+                if len(last_script) == 0:
+                    self.output('call r <filename> to run a script.')
+                else:
+                    run_func(last_script)
             elif len(parts) == 2 and os.path.isfile(parts[1]):
+                last_script = parts[1]
                 run_func(parts[1])
             else:
                 self.crow.writeline(cmd)
@@ -284,7 +290,7 @@ class DruidRepl(UiPage):
                 self.crow.writeline(cmd)
         else:
             self.crow.writeline(cmd)
-            
+
     def crow_event(self, line, event, args):
         if event == 'stream' or event == 'change':
             ch_str, val = args
