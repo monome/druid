@@ -30,6 +30,8 @@ setup(
         "Click>=7.0",
         "prompt-toolkit>=2.0.10,<3.0",
         "pyserial>=3.4",
+        "pyusb",
+        "requests",
         "setuptools",
         "setuptools_scm",
         "setuptools_scm_git_archive",

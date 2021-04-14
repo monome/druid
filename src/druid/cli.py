@@ -5,9 +5,12 @@ import time
 
 import click
 
+import requests
+
 from druid import __version__
 from druid.crow import Crow
 from druid import repl as druid_repl
+from druid import pydfu
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -43,6 +46,32 @@ def upload(filename):
         crow.write('^^p')
         time.sleep(0.3)
         click.echo(crow.read(1000000))
+
+@cli.command(short_help="Update bootloader")
+def update():
+    print("update")
+    v = requests.get('https://raw.githubusercontent.com/monome/druid/master/README.md')
+    print(v.text)
+
+    """
+    Update bootloader
+
+    with Crow() as crow:
+      crow.connect()
+      crow.write('^^b')
+      time.sleep(1.0)
+      print("crow bootloader enabled")
+      try:
+        pydfu.init()
+      except ValueError:
+        print("pydfu didn't find crow")
+        exit()
+      print("Writing binary...")
+      pydfu.write_bin("crow.bin", progress=pydfu.cli_progress)
+      print("Exiting DFU...")
+      pydfu.exit_dfu()
+    """
+
 
 @cli.command()
 @click.argument("filename", type=click.Path(exists=True), required=False)
