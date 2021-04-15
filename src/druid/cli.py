@@ -6,6 +6,8 @@ import time
 import click
 
 import requests
+import wget
+import os
 
 from druid import __version__
 from druid.crow import Crow
@@ -51,33 +53,64 @@ def upload(filename):
 def update():
     """ Update bootloader
     """
-    print("update")
-    v = requests.get('https://raw.githubusercontent.com/monome/crow/main/version.txt')
-    r = v.text.split()
-    print("version", r[0])
-    print(r[1])
+    print("Checking for updates...")
+    git_query = requests.get('https://raw.githubusercontent.com/monome/crow/main/version.txt')
+    git_data = git_query.text.split()
+    print(">> git version", git_data[0])
 
-    """
     with Crow() as crow:
-      crow.connect()
-      # get version
-      # compare to remote version (quit if up to date)
-      # download file
-      # unpack file
-      # flash file (below)
-      crow.write('^^b')
-      time.sleep(1.0)
-      print("crow bootloader enabled")
+      local_version = "none"
+      try:
+        crow.connect()
+      except:
+        print("No crow found, or might be in bootloader mode already...")
+        local_version = "0"
+
+      # crow found: clear script and read version
+      if local_version != "0":
+        crow.write("^^c")
+        time.sleep(1.0)
+        c = crow.read(1000000)
+        crow.write("^^v")
+        tmp = (crow.read(100)).split("'")
+        local_version = tmp[1][1:]
+
+      print(">> local version: ", local_version)
+
+      if local_version >= git_data[0]:
+        print("Up to date.")
+        exit()
+
+      # delete old crow.dfu if exists
+      if os.path.exists("crow.dfu"):
+        os.remove("crow.dfu")
+
+      print("Downloading new version:", git_data[1])
+      wget.download(git_data[1])
+      print("\n")
+
+      if local_version != "0":
+        crow.write('^^b')
+        time.sleep(1.0)
+        print("Crow bootloader enabled.")
+
       try:
         pydfu.init()
       except ValueError:
-        print("pydfu didn't find crow")
+        print("Error: pydfu didn't find crow!")
         exit()
-      print("Writing binary...")
-      pydfu.write_bin("crow.bin", progress=pydfu.cli_progress)
+
+      elements = pydfu.read_dfu_file("crow.dfu")
+      if not elements:
+          return
+      print("Writing memory...")
+      pydfu.write_elements(elements, True, progress=pydfu.cli_progress)
+
       print("Exiting DFU...")
       pydfu.exit_dfu()
-    """
+
+      os.remove("crow.dfu")
+      print("Update complete.")
 
 
 @cli.command()

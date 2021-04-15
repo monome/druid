@@ -35,6 +35,7 @@ setup(
         "setuptools",
         "setuptools_scm",
         "setuptools_scm_git_archive",
+        "wget",
     ],
     extras_require={
         "test": [
