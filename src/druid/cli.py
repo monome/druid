@@ -6,8 +6,8 @@ import time
 import click
 
 import requests
-import wget
 import os
+from packaging import version
 
 from druid import __version__
 from druid.crow import Crow
@@ -49,9 +49,9 @@ def upload(filename):
         time.sleep(0.3)
         click.echo(crow.read(1000000))
 
-@cli.command(short_help="Update bootloader")
+@cli.command(short_help="Update crow firmware")
 def update():
-    """ Update bootloader
+    """ Update crow firmware
     """
     print("Checking for updates...")
     git_query = requests.get('https://raw.githubusercontent.com/monome/crow/main/version.txt')
@@ -77,7 +77,7 @@ def update():
 
       print(">> local version: ", local_version)
 
-      if local_version >= git_data[0]:
+      if version.parse(local_version) >= version.parse(git_data[0]):
         print("Up to date.")
         exit()
 
@@ -86,8 +86,9 @@ def update():
         os.remove("crow.dfu")
 
       print("Downloading new version:", git_data[1])
-      wget.download(git_data[1])
-      print("\n")
+      res = requests.get(git_data[1])
+      with open('crow.dfu', 'wb') as fwfile:
+        fwfile.write(res.content)
 
       if local_version != "0":
         crow.write('^^b')

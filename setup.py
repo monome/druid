@@ -28,6 +28,7 @@ setup(
     ],
     install_requires=[
         "Click>=7.0",
+        "packaging",
         "prompt-toolkit>=2.0.10,<3.0",
         "pyserial>=3.4",
         "pyusb",
@@ -35,7 +36,6 @@ setup(
         "setuptools",
         "setuptools_scm",
         "setuptools_scm_git_archive",
-        "wget",
     ],
     extras_require={
         "test": [

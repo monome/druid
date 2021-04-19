@@ -1,6 +1,9 @@
 #!/usr/bin/env python2
 # This file is part of the OpenMV project.
 #
+# https://github.com/openmv/openmv
+# /tools/pydfu.py
+#
 # Copyright (c) 2013-2021 Ibrahim Abdelkader <iabdalkader@openmv.io>
 # Copyright (c) 2013-2021 Kwabena W. Agyeman <kwagyeman@openmv.io>
 #
