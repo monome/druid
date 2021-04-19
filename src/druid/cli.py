@@ -68,8 +68,8 @@ def update():
 
       # crow found: clear script and read version
       if local_version != "0":
-        crow.write("^^c")
-        time.sleep(1.0)
+        crow.write("crow.reset()")
+        time.sleep(0.1)
         c = crow.read(1000000)
         crow.write("^^v")
         tmp = (crow.read(100)).split("'")
