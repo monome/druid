@@ -10,11 +10,11 @@ from druid.exceptions import DeviceNotFoundError
 
 logger = logging.getLogger(__name__)
 
-def find_serial_port(hwid):
+def find_serial_port():
     for portinfo in serial.tools.list_ports.comports():
-        if hwid in portinfo.hwid:
+        if "crow" in portinfo.product:
             return portinfo
-    raise DeviceNotFoundError(f"can't find device {hwid}")
+    raise DeviceNotFoundError(f"can't find crow device")
 
 class Crow:
     def __init__(self, serial=None):
@@ -23,7 +23,7 @@ class Crow:
         self.event_handlers = {}
 
     def find_device(self):
-        portinfo = find_serial_port('USB VID:PID=0483:5740')
+        portinfo = find_serial_port()
         try:
             return serial.Serial(
                 portinfo.device,
@@ -62,7 +62,7 @@ class Crow:
 
     def replace_handlers(self, handlers):
         self.event_handlers = handlers
-    
+
     def reconnect(self, err_event=False):
         try:
             self.connect()

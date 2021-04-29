@@ -50,7 +50,7 @@ def upload(filename):
         click.echo(crow.read(1000000))
 
 @cli.command(short_help="Update crow firmware")
-def update():
+def firmware():
     """ Update crow firmware
     """
     print("Checking for updates...")
