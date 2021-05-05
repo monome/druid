@@ -124,7 +124,7 @@ def clearscript():
         exit()
     print("Clearing userscript...")
     # note we must write a single byte of 0x00 but are primarily just triggering erase of the flash page
-    pydfu.write_elements([{"addr":0x08010000, "size": 1, "data": [0]}], False, progress=pydfu.cli_progress)
+    pydfu.write_elements([{"addr":0x08010000, "size": 1, "data": [0]}], False)
     print("Complete. Exiting DFU...")
     pydfu.exit_dfu()
 
