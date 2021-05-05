@@ -214,6 +214,10 @@ class DruidRepl(UiPage):
         self.captures = [
             TextArea(style='class:capture-field', height=2),
             TextArea(style='class:capture-field', height=2),
+            TextArea(style='class:capture-field', height=2),
+            TextArea(style='class:capture-field', height=2),
+            TextArea(style='class:capture-field', height=2),
+            TextArea(style='class:capture-field', height=2),
         ]
         self.output_field = TextArea(
             style='class:output-field',
@@ -297,8 +301,23 @@ class DruidRepl(UiPage):
             ch = int(ch_str)
             if ch >= 1 and ch <= 2:
                 self.output_to_field(self.captures[ch - 1], f'\ninput[{ch}] = {val}\n')
+        elif event == 'pubview':
+            io, ch_str, val = args
+            ch = int(ch_str)
+            if io == "'input'":
+                if ch >= 1 and ch <= 2:
+                    self.output_to_field(self.captures[ch - 1], f'\nin[{ch}] = {val}\n')
+            elif io == "'output'":
+                if ch >= 1 and ch <= 4:
+                    self.output_to_field(self.captures[ch + 1], f'\nout[{ch}] = {val}\n')
+            else:
+                self.output_to_field(self.captures[0], f'\nERR:{io}[{ch}] = {val}\n')
+        elif event == 'ready' or event == 'pupdate' or event == 'pub':
+            args = args # NOP
+            # ignore for now
+            # TODO ^^ready triggers public.discover() and capture public vars into a modifiable form
         else:
-            self.output(f'^^{event}({", ".join(args)})')
+            self.output(f'^^{event}({", ".join(args)})\n')
 
     # these come from:
     # https://github.com/prompt-toolkit/python-prompt-toolkit/blob/5c3d13eb849885bc4c1a2553ea6f81e6272f84c9/prompt_toolkit/key_binding/bindings/scroll.py#L147
