@@ -114,6 +114,21 @@ def firmware():
       print("Update complete.")
 
 
+@cli.command(short_help="Clear userscript")
+def clearscript():
+    """ Clear userscript from crow' flash memory """
+    try:
+        pydfu.init()
+    except ValueError:
+        print("Error: pydfu didn't find crow! Check you've forced the bootloader.")
+        exit()
+    print("Clearing userscript...")
+    # note we must write a single byte of 0x00 but are primarily just triggering erase of the flash page
+    pydfu.write_elements([{"addr":0x08010000, "size": 1, "data": [0]}], False, progress=pydfu.cli_progress)
+    print("Complete. Exiting DFU...")
+    pydfu.exit_dfu()
+
+
 @cli.command()
 @click.argument("filename", type=click.Path(exists=True), required=False)
 def repl(filename):
