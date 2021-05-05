@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def find_serial_port():
     for portinfo in serial.tools.list_ports.comports():
-        if "crow" in portinfo.product:
+        if "crow: telephone line" in portinfo.product:
             return portinfo
     raise DeviceNotFoundError(f"can't find crow device")
 
