@@ -105,7 +105,7 @@ def firmware():
       if not elements:
           return
       print("Writing memory...")
-      pydfu.write_elements(elements, True, progress=pydfu.cli_progress)
+      pydfu.write_elements(elements, False, progress=pydfu.cli_progress)
 
       print("Exiting DFU...")
       pydfu.exit_dfu()
