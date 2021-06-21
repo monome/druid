@@ -46,6 +46,8 @@ def upload(filename):
 
 @cli.command()
 @click.argument("filename", type=click.Path(exists=True), required=False)
-def repl(filename):
+@click.option("--theme/--no-theme", default=True, show_default=True,
+              help="Whether to use the internal color theme.")
+def repl(filename, theme):
     """ Start interactive terminal """
-    druid_repl.main(filename)
+    druid_repl.main(filename, theme)
