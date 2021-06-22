@@ -51,7 +51,7 @@ druid_help = """
 last_script = ''
 
 class DruidUi:
-    def __init__(self):
+    def __init__(self, use_theme):
         self.statusbar = Window(
             height=1,
             char='/',
@@ -82,14 +82,18 @@ class DruidUi:
         def quit_druid(event):
             event.app.exit()
 
-        self.style = Style([
-            ('capture-field', '#747369'),
-            ('output-field', '#d3d0c8'),
-            ('input-field', '#f2f0ec'),
-            ('line', '#747369'),
-            ('scrollbar.background', 'bg:#000000'),
-            ('scrollbar.button', 'bg:#747369'),
-        ])
+        if use_theme:
+            self.style = Style([
+                ('capture-field', '#747369'),
+                ('output-field', '#d3d0c8'),
+                ('input-field', '#f2f0ec'),
+                ('line', '#747369'),
+                ('scrollbar.background', 'bg:#000000'),
+                ('scrollbar.button', 'bg:#747369'),
+            ])
+        else:
+            self.style = Style([])
+
         self.layout = Layout(self.container)
 
         self.app = Application(
@@ -338,9 +342,9 @@ class DruidRepl(UiPage):
 
 
 class Druid:
-    def __init__(self, crow):
+    def __init__(self, crow, use_theme):
         self.crow = crow
-        self.ui = DruidUi()
+        self.ui = DruidUi(use_theme)
         self.repl = DruidRepl(ui=self.ui, crow=crow)
 
         self.ui.add_page('repl', self.repl)
@@ -390,7 +394,7 @@ log_config = {
     },
 }
 
-def main(script=None):
+def main(script=None, use_theme=True):
     try:
         logging.config.dictConfig(log_config)
     except ValueError:
@@ -400,7 +404,8 @@ def main(script=None):
     use_asyncio_event_loop()
     with patch_stdout():
         with Crow() as crow:
-            shell = Druid(crow)
+            shell = Druid(crow, use_theme)
+
             server = DruidServer(shell.repl, 'localhost', 6666)
             crow.reconnect(err_event=True)
             background_task = asyncio.gather(
