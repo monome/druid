@@ -33,6 +33,7 @@ setup(
         "pyserial>=3.4",
         "pyusb",
         "requests",
+        "websockets>=9.1",
         "setuptools",
         "setuptools_scm",
         "setuptools_scm_git_archive",

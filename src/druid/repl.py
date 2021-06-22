@@ -29,6 +29,7 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.menus import CompletionsMenu
 
 from druid.crow import Crow
+from druid.server import DruidServer
 
 
 logger = logging.getLogger(__name__)
@@ -340,8 +341,9 @@ class Druid:
     def __init__(self, crow):
         self.crow = crow
         self.ui = DruidUi()
+        self.repl = DruidRepl(ui=self.ui, crow=crow)
 
-        self.ui.add_page('repl', DruidRepl(ui=self.ui, crow=crow))
+        self.ui.add_page('repl', self.repl)
         self.ui.set_page('repl')
 
     async def foreground(self, script=None):
@@ -399,9 +401,11 @@ def main(script=None):
     with patch_stdout():
         with Crow() as crow:
             shell = Druid(crow)
+            server = DruidServer(shell.repl, 'localhost', 6666)
             crow.reconnect(err_event=True)
             background_task = asyncio.gather(
                 shell.background(),
+                server.listen(),
                 return_exceptions=True,
             )
             loop.run_until_complete(shell.foreground())
