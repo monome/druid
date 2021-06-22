@@ -28,8 +28,11 @@ setup(
     ],
     install_requires=[
         "Click>=7.0",
+        "packaging",
         "prompt-toolkit>=2.0.10,<3.0",
         "pyserial>=3.4",
+        "pyusb",
+        "requests",
         "websockets>=9.1",
         "setuptools",
         "setuptools_scm",
