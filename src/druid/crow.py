@@ -16,8 +16,8 @@ def find_serial_port(hwid):
         if os.name == "nt": # windows doesn't know anything about the port
             return portinfo
         elif hwid in portinfo.hwid: # more precise detection for linux/macos
-            #if "crow: telephone line" in portinfo.product:
-            return portinfo
+            if "crow: telephone line" in portinfo.product:
+                return portinfo
     raise DeviceNotFoundError(f"can't find crow device")
 
 class Crow:
