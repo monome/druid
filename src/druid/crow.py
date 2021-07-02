@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import os
 
 import serial
 import serial.tools.list_ports
@@ -12,9 +13,11 @@ logger = logging.getLogger(__name__)
 
 def find_serial_port(hwid):
     for portinfo in serial.tools.list_ports.comports():
-        if hwid in portinfo.hwid:
-            if "crow: telephone line" in portinfo.product:
-                return portinfo
+        if os.name == "nt": # windows doesn't know anything about the port
+            return portinfo
+        elif hwid in portinfo.hwid: # more precise detection for linux/macos
+            #if "crow: telephone line" in portinfo.product:
+            return portinfo
     raise DeviceNotFoundError(f"can't find crow device")
 
 class Crow:
