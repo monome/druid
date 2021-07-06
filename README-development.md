@@ -7,14 +7,23 @@ First create a [virtual environment](https://docs.python.org/3/library/venv.html
 cd <directory where druid is checked out>
 # Create virtual environment
 python3 -m venv .venv
+
 # Active the virtual environment
+# Linux / Mac OS
 source .venv/bin/activate
+# Windows
+source .venv/Scripts/activate
+
 # Do an editable install of druid
 pip install -e .
 # Activate the virtual environment again to add the druid that's now installed in the virtual environment to $PATH
 source .venv/bin/activate
+
 # Now execute druid, which runs directly from the code from this directory
+# Linux / Mac OS / Windows(PowerShell)
 druid
+# Windows (GIT Bash)
+winpty druid
 ```
 
 Closing the terminal will also exit the virtual environment. Running `deactivate` will exit the virtual environment as well.
