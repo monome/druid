@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 def find_serial_port(hwid):
     for portinfo in serial.tools.list_ports.comports():
-        if os.name == "nt": # windows doesn't know anything about the port
-            return portinfo
-        elif hwid in portinfo.hwid: # more precise detection for linux/macos
-            if "crow: telephone line" in portinfo.product:
+        if hwid in portinfo.hwid: # must match VID:PID pair (STM32 CDC Device)
+            if os.name == "nt": # windows doesn't know the name of the device
+                return portinfo
+            if "crow: telephone line" in portinfo.product: # more precise detection for linux/macos
                 return portinfo
     raise DeviceNotFoundError(f"can't find crow device")
 
