@@ -100,7 +100,7 @@ class DruidUi:
             layout=self.layout,
             key_bindings=self.key_bindings,
             style=self.style,
-            mouse_support=True,
+            mouse_support=False,
             full_screen=True,
         )
 
