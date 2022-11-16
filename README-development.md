@@ -34,3 +34,12 @@ cd <directory where druid is checked out>
 source .venv/bin/activate
 druid
 ```
+
+## Package Update
+
+- pypi.org account, get token for __token__ entry
+
+```
+python setup.py sdist bdist_wheel
+python -m twine upload dist/*
+```
