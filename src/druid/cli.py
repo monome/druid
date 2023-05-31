@@ -74,6 +74,8 @@ def firmware():
         crow.write("^^v")
         tmp = (crow.read(100)).split("'")
         local_version = tmp[1][1:]
+        # strip off git version info
+        local_version = local_version.split('-')[0]
 
       print(">> local version: ", local_version)
 
