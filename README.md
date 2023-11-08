@@ -52,7 +52,15 @@ Diagnostic logs are written to `druid.log`.
 
 ## Command Line Interface
 
-Sometimes you don't need the repl, but just want to upload/download scripts to/from crow. You can do so directly from the command line with the `upload` and `download` commands.
+Sometimes you don't need the repl, but just want to run/upload/download scripts to/from crow. You can do so directly from the command line with the `upload` and `download` commands.
+
+### Run
+
+```
+druid run shiny_things.lua
+```
+
+Run the provided lua file, `shiny_things.lua`, on crow without storing it in flash.
 
 ### Upload
 
