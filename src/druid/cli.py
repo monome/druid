@@ -33,6 +33,22 @@ def download():
         time.sleep(0.3)
         click.echo(crow.read(1000000))
 
+@cli.command(short_help="Run a file on crow")
+@click.argument("filename", type=click.Path(exists=True))
+def upload(filename):
+    """
+    Run a file on crow.
+    FILENAME is the path to the Lua file to upload
+    """
+    with Crow() as crow:
+        crow.connect()
+        crow.execute(filename)
+        click.echo(crow.read(1000000))
+        time.sleep(0.3)
+        crow.write('^^p')
+        time.sleep(0.3)
+        click.echo(crow.read(1000000))
+
 @cli.command(short_help="Upload a file to crow")
 @click.argument("filename", type=click.Path(exists=True))
 def upload(filename):
