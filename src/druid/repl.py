@@ -295,7 +295,9 @@ class DruidRepl(UiPage):
             self.crow.writeline(cmd)
 
     def crow_event(self, line, event, args):
-        if event == 'stream' or event == 'change':
+        if event == 'pupdate':
+            pass
+        elif event == 'stream' or event == 'change':
             ch_str, val = args
             ch = int(ch_str)
             if ch >= 1 and ch <= 2:
