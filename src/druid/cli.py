@@ -65,61 +65,61 @@ def upload(filename):
         time.sleep(0.3)
         click.echo(crow.read(1000000))
 
-@cli.command(short_help="Update crow firmware")
+@cli.command(short_help="Update atrium firmware")
 def firmware():
     """ Update crow firmware
     """
-    print("Checking for updates...")
-    git_query = requests.get('https://raw.githubusercontent.com/monome/crow/main/version.txt')
-    git_data = git_query.text.split()
-    print(">> git version", git_data[0])
+    # print("Checking for updates...")
+    # git_query = requests.get('https://raw.githubusercontent.com/monome/crow/main/version.txt')
+    # git_data = git_query.text.split()
+    # print(">> git version", git_data[0])
 
     with Crow() as crow:
       local_version = "none"
       try:
         crow.connect()
       except:
-        print("No crow found, or might be in bootloader mode already...")
+        print("No atrium found, or might be in bootloader mode already...")
         local_version = "0"
 
       # crow found: clear script and read version
-      if local_version != "0":
-        crow.write("crow.reset()")
-        time.sleep(0.1)
-        c = crow.read(1000000)
-        crow.write("^^v")
-        tmp = (crow.read(100)).split("'")
-        local_version = tmp[1][1:]
-        # strip off git version info
-        local_version = local_version.split('-')[0]
+      # if local_version != "0":
+      #   crow.write("crow.reset()")
+      #   time.sleep(0.1)
+      #   c = crow.read(1000000)
+      #   crow.write("^^v")
+      #   tmp = (crow.read(100)).split("'")
+      #   local_version = tmp[1][1:]
+      #   # strip off git version info
+      #   local_version = local_version.split('-')[0]
 
-      print(">> local version: ", local_version)
+      # print(">> local version: ", local_version)
 
-      if version.parse(local_version) >= version.parse(git_data[0]):
-        print("Up to date.")
-        exit()
+      # if version.parse(local_version) >= version.parse(git_data[0]):
+      #   print("Up to date.")
+      #   exit()
 
       # delete old crow.dfu if exists
-      if os.path.exists("crow.dfu"):
-        os.remove("crow.dfu")
+      # if os.path.exists("crow.dfu"):
+      #   os.remove("crow.dfu")
 
-      print("Downloading new version:", git_data[1])
-      res = requests.get(git_data[1])
-      with open('crow.dfu', 'wb') as fwfile:
-        fwfile.write(res.content)
+      # print("Downloading new version:", git_data[1])
+      # res = requests.get(git_data[1])
+      # with open('crow.dfu', 'wb') as fwfile:
+      #   fwfile.write(res.content)
 
       if local_version != "0":
         crow.write('^^b')
         time.sleep(1.0)
-        print("Crow bootloader enabled.")
+        print("atrium bootloader enabled.")
 
       try:
         pydfu.init()
       except ValueError:
-        print("Error: pydfu didn't find crow!")
+        print("Error: pydfu didn't find atrium!")
         exit()
 
-      elements = pydfu.read_dfu_file("crow.dfu")
+      elements = pydfu.read_dfu_file("atrium_core.dfu")
       if not elements:
           return
       print("Writing memory...")
@@ -128,8 +128,8 @@ def firmware():
       print("Exiting DFU...")
       pydfu.exit_dfu()
 
-      os.remove("crow.dfu")
-      print("Update complete.")
+      # os.remove("crow.dfu")
+      # print("Update complete.")
 
 
 @cli.command(short_help="Clear userscript")
@@ -138,7 +138,7 @@ def clearscript():
     try:
         pydfu.init()
     except ValueError:
-        print("Error: pydfu didn't find crow! Check you've forced the bootloader.")
+        print("Error: pydfu didn't find atrium! Check you've forced the bootloader.")
         exit()
     print("Clearing userscript...")
     # note we must write a single byte of 0x00 but are primarily just triggering erase of the flash page

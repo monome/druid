@@ -200,9 +200,9 @@ class DruidRepl(UiPage):
         self.completer = ReplCompleter()
         super().__init__(ui)
 
-        on_disconnect = lambda exc: self.output(' <crow disconnected>\n')
+        on_disconnect = lambda exc: self.output(' <atrium disconnected>\n')
         self.handlers = {
-            'connect': [lambda: self.output(' <crow connected>\n')],
+            'connect': [lambda: self.output(' <atrium connected>\n')],
             'connect_err': [on_disconnect],
             'disconnect': [on_disconnect],
 
@@ -353,7 +353,7 @@ class Druid:
     async def foreground(self, script=None):
         if script is not None:
             if self.crow.is_connected == False:
-                print('no crow device found. exiting.')
+                print('no atrium device found. exiting.')
                 return
             self.crow.execute(script)
 
@@ -406,11 +406,11 @@ def main(script=None, use_theme=True):
         with Crow() as crow:
             shell = Druid(crow, use_theme)
 
-            server = DruidServer(shell.repl, 'localhost', 6666)
+            # server = DruidServer(shell.repl, 'localhost', 6666)
             crow.reconnect(err_event=True)
             background_task = asyncio.gather(
                 shell.background(),
-                server.listen(),
+                # server.listen(),
                 return_exceptions=True,
             )
             loop.run_until_complete(shell.foreground())

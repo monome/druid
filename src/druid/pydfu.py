@@ -545,6 +545,12 @@ def main():
         action="store_true",
         default=False
     )
+    parser.add_argument(
+        "-r", "--reset",
+        help="reset dfu device to runtime",
+        action="store_true",
+        default=False
+    )
     args = parser.parse_args()
 
     __verbose = args.verbose
@@ -558,6 +564,10 @@ def main():
     if args.mass_erase:
         print ("Mass erase...")
         mass_erase()
+
+    if args.reset:
+        print ("Exiting DFU...")
+        exit_dfu()
 
     if args.path:
         ext = os.path.splitext(args.path)[1]

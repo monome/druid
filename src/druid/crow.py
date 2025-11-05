@@ -18,7 +18,7 @@ def find_serial_port(hwid):
                 return portinfo
             if "crow: telephone line" in portinfo.product: # more precise detection for linux/macos
                 return portinfo
-    raise DeviceNotFoundError(f"can't find crow device")
+    raise DeviceNotFoundError(f"can't find atrium device")
 
 class Crow:
     def __init__(self, serial=None):
@@ -27,7 +27,7 @@ class Crow:
         self.event_handlers = {}
 
     def find_device(self):
-        portinfo = find_serial_port('USB VID:PID=0483:5740')
+        portinfo = find_serial_port('USB VID:PID=CAFE:52A4')
         try:
             return serial.Serial(
                 portinfo.device,
@@ -46,7 +46,7 @@ class Crow:
 
     def connect(self):
         self.serial = self.find_device()
-        logger.info(f'connected to crow on {self.serial.port}')
+        logger.info(f'connected to atrium on {self.serial.port}')
 
     def disconnect(self):
         if self.serial is not None:

@@ -21,7 +21,7 @@ setup(
     package_dir={"": "src"},
     include_package_data=True,
     use_scm_version=True,
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     setup_requires=[
         "setuptools_scm",
         "setuptools_scm_git_archive",
@@ -37,6 +37,7 @@ setup(
         "setuptools",
         "setuptools_scm",
         "setuptools_scm_git_archive",
+        "pyfu-usb",
     ],
     extras_require={
         "test": [
