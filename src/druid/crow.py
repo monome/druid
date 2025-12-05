@@ -14,9 +14,10 @@ logger = logging.getLogger(__name__)
 def find_serial_port(hwid):
     for portinfo in serial.tools.list_ports.comports():
         if hwid in portinfo.hwid: # must match VID:PID pair (STM32 CDC Device)
+            logger.info(portinfo)
             if os.name == "nt": # windows doesn't know the name of the device
                 return portinfo
-            if "crow: telephone line" in portinfo.product: # more precise detection for linux/macos
+            if "Atrium" in portinfo.product: # more precise detection for linux/macos
                 return portinfo
     raise DeviceNotFoundError(f"can't find atrium device")
 
@@ -29,12 +30,14 @@ class Crow:
     def find_device(self):
         portinfo = find_serial_port('USB VID:PID=CAFE:52A4')
         try:
+            logger.info(portinfo.device)
             return serial.Serial(
                 portinfo.device,
                 baudrate=115200,
                 timeout=0.1,
             )
         except serial.SerialException as e:
+            logger.info(f'cant open port: {e}')
             raise DeviceNotFoundError("can't open serial port", e)
 
     def __enter__(self):

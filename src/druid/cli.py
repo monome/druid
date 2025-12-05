@@ -33,6 +33,22 @@ def download():
         time.sleep(0.3)
         click.echo(crow.read(1000000))
 
+@cli.command(short_help="Download a patch from atrium")
+@click.argument("num", type=click.IntRange(0, 5))
+@click.argument("filename", type=click.Path(), required=False)
+def patch(num, filename):
+    with Crow() as crow:
+        crow.connect()
+        print(f'^^{num}')
+        crow.readbin(1000000) # flush buffer
+        crow.write(f'^^{num}')
+        time.sleep(0.3)
+        if filename is None:
+            click.echo(crow.read(1000000))
+        else:
+            with open(filename, "wb") as f:
+                f.write(crow.readbin(1000000))
+
 @cli.command(short_help="Run a file on crow")
 @click.argument("filename", type=click.Path(exists=True))
 def upload(filename):
