@@ -42,12 +42,12 @@ def patch(num, filename):
         print(f'^^{num}')
         crow.readbin(1000000) # flush buffer
         crow.write(f'^^{num}')
-        time.sleep(0.3)
+        # time.sleep(1)
         if filename is None:
-            click.echo(crow.read(1000000))
+            click.echo(crow.readbin(10000000, 1.0))
         else:
             with open(filename, "wb") as f:
-                f.write(crow.readbin(1000000))
+                f.write(crow.readbin(10000000, 1.0))
 
 @cli.command(short_help="Run a file on crow")
 @click.argument("filename", type=click.Path(exists=True))

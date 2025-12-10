@@ -113,7 +113,8 @@ class Crow:
     def upload(self, fname):
         self._upload(fname, 'uploading', '^^w')
 
-    def readbin(self, count):
+    def readbin(self, count, timeout=0.1):
+        self.serial.timeout = timeout
         b = self.serial.read(count)
         if len(b) > 0:
             logger.debug(f'<- {b}')
