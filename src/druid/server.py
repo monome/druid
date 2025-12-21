@@ -10,7 +10,7 @@ class DruidServer:
         self.host = host
         self.port = port
 
-    async def handle(self, websocket, path):
+    async def handle(self, websocket):
         (host, *args) = websocket.remote_address
         #self.repl.output(f'\n <ws connected: {host}>')
         self.repl.handlers['crow_output'].append(
@@ -31,7 +31,8 @@ class DruidServer:
 
     async def listen(self):
         self.repl.output(f' <listening at ws://{self.host}:{self.port}>')
-        await websockets.serve(self.handle, self.host, self.port)
+        async with websockets.serve(self.handle,  self.host, self.port) as server:
+            await server.serve_forever()
 
     async def handle_output(self, websocket, output):
         await websocket.send(output)
