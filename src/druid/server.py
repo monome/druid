@@ -25,6 +25,8 @@ class DruidServer:
         except ConnectionClosedError as e:
             #self.repl.output(f'\n <ws disconnected: {host} ({e.code} {e.reason or "no reason"})>')
             pass
+        except AttributeError as e:
+            self.repl.output(f'\n <msg not sent (is crow connected?): {e}>')
         else:
             #self.repl.output(f'\n <ws disconnected: {host}>')
             pass
