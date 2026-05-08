@@ -35,10 +35,10 @@ def download():
 
 @cli.command(short_help="Run a file on crow")
 @click.argument("filename", type=click.Path(exists=True))
-def upload(filename):
+def run(filename):
     """
     Run a file on crow.
-    FILENAME is the path to the Lua file to upload
+    FILENAME is the path to the Lua file to run
     """
     with Crow() as crow:
         crow.connect()
