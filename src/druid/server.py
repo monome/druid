@@ -10,7 +10,7 @@ class DruidServer:
         self.host = host
         self.port = port
 
-    async def handle(self, websocket, path):
+    async def handle(self, websocket):
         (host, *args) = websocket.remote_address
         #self.repl.output(f'\n <ws connected: {host}>')
         self.repl.handlers['crow_output'].append(
@@ -25,13 +25,16 @@ class DruidServer:
         except ConnectionClosedError as e:
             #self.repl.output(f'\n <ws disconnected: {host} ({e.code} {e.reason or "no reason"})>')
             pass
+        except AttributeError as e:
+            self.repl.output(f'\n <msg not sent (is crow connected?): {e}>')
         else:
             #self.repl.output(f'\n <ws disconnected: {host}>')
             pass
 
     async def listen(self):
         self.repl.output(f' <listening at ws://{self.host}:{self.port}>')
-        await websockets.serve(self.handle, self.host, self.port)
+        async with websockets.serve(self.handle,  self.host, self.port) as server:
+            await server.serve_forever()
 
     async def handle_output(self, websocket, output):
         await websocket.send(output)
