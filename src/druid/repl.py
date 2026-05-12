@@ -400,7 +400,9 @@ def main(script=None, use_theme=True):
     except ValueError:
         print('could not configure file logging (insufficient permissions?)')
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     use_asyncio_event_loop()
     with patch_stdout():
         with Crow() as crow:
